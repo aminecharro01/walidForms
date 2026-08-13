@@ -112,18 +112,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const ipHash = createHash("sha256").update(ip).digest("hex");
 
-  const { data: submission, error: submissionError } = await supabase
-    .from("submissions")
-    .insert({
-      form_id: form.id,
-      form_version_id: form.published_version_id,
-      ip_hash: ipHash,
-      user_agent: request.headers.get("user-agent") ?? null,
-    })
-    .select()
-    .single();
+  // Généré côté serveur plutôt que relu via `.select()` après insertion : la table
+  // submissions n'a volontairement aucune policy de lecture publique (RLS), donc
+  // demander le RETURNING de l'insert échouerait pour un visiteur anonyme.
+  const submissionId = randomUUID();
+  const { error: submissionError } = await supabase.from("submissions").insert({
+    id: submissionId,
+    form_id: form.id,
+    form_version_id: form.published_version_id,
+    ip_hash: ipHash,
+    user_agent: request.headers.get("user-agent") ?? null,
+  });
 
-  if (submissionError || !submission) {
+  if (submissionError) {
     console.error("submit: insert submissions failed", submissionError);
     return NextResponse.json({ error: "تعذر إرسال الرد، الرجاء المحاولة مرة أخرى" }, { status: 500 });
   }
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         location_lng?: number;
         location_accuracy?: number;
       } = {
-        submission_id: submission.id,
+        submission_id: submissionId,
         field_id: fieldId,
         value_json: value,
       };
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // Upload des fichiers vers Supabase Storage (bucket privé) + enregistrement des métadonnées
   for (const [fieldId, file] of filesByField) {
-    const storagePath = `${form.id}/${submission.id}/${randomUUID()}-${file.name}`;
+    const storagePath = `${form.id}/${submissionId}/${randomUUID()}-${file.name}`;
     const arrayBuffer = await file.arrayBuffer();
 
     const { error: uploadError } = await supabase.storage
@@ -174,19 +175,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     if (uploadError) continue; // ne bloque pas toute la soumission pour un fichier
 
-    const { data: answerRow } = await supabase
-      .from("submission_answers")
-      .insert({
-        submission_id: submission.id,
-        field_id: fieldId,
-        value_json: { name: file.name, size: file.size, type: file.type },
-      })
-      .select()
-      .single();
+    const answerId = randomUUID();
+    const { error: answerError } = await supabase.from("submission_answers").insert({
+      id: answerId,
+      submission_id: submissionId,
+      field_id: fieldId,
+      value_json: { name: file.name, size: file.size, type: file.type },
+    });
 
-    if (answerRow) {
+    if (!answerError) {
       await supabase.from("file_uploads").insert({
-        submission_answer_id: answerRow.id,
+        submission_answer_id: answerId,
         storage_path: storagePath,
         file_name: file.name,
         file_size: file.size,
@@ -195,5 +194,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  return NextResponse.json({ success: true, submissionId: submission.id });
+  return NextResponse.json({ success: true, submissionId });
 }
