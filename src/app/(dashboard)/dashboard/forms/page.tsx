@@ -89,10 +89,13 @@ export default async function FormsListPage() {
                 </Badge>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-500">
-                <span className="flex items-center gap-1.5">
+                <Link
+                  href={`/dashboard/forms/${form.id}/responses`}
+                  className="flex items-center gap-1.5 hover:text-brand-600 hover:underline"
+                >
                   <MessageSquare className="h-4 w-4" />
                   {counts.get(form.id) ?? 0} رد
-                </span>
+                </Link>
                 <Link
                   href={`/dashboard/forms/${form.id}/analytics`}
                   className="flex items-center gap-1.5 text-brand-600 hover:underline"

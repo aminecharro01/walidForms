@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { MoreVertical, Copy, Trash2, Eye, Pause, Play, Share2 } from "lucide-react";
+import { MoreVertical, Copy, Trash2, Eye, Pause, Play, Share2, MessageSquare } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,9 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
       <Dropdown trigger={<Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>}>
         <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}>
           <Eye className="h-4 w-4" /> تعديل ومعاينة
+        </DropdownItem>
+        <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/responses`)}>
+          <MessageSquare className="h-4 w-4" /> عرض الردود
         </DropdownItem>
         {status !== "draft" && (
           <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/share`)}>
