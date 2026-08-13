@@ -12,14 +12,14 @@ export function buildFieldSchema(field: FormField): z.ZodTypeAny {
   switch (field.type) {
     case "short_text":
     case "long_text": {
-      let s = z.string();
+      let s = z.string({ error: REQUIRED_MSG });
       if (field.validation?.minLength) s = s.min(field.validation.minLength, REQUIRED_MSG);
       if (field.validation?.maxLength) s = s.max(field.validation.maxLength);
       schema = field.is_required ? s.min(1, REQUIRED_MSG) : s.optional().or(z.literal(""));
       break;
     }
     case "email": {
-      const s = z.string().email(EMAIL_MSG);
+      const s = z.string({ error: REQUIRED_MSG }).email(EMAIL_MSG);
       schema = field.is_required ? s : s.optional().or(z.literal(""));
       break;
     }
@@ -32,28 +32,31 @@ export function buildFieldSchema(field: FormField): z.ZodTypeAny {
     }
     case "date":
     case "time": {
-      const s = z.string().min(1, REQUIRED_MSG);
+      const s = z.string({ error: REQUIRED_MSG }).min(1, REQUIRED_MSG);
       schema = field.is_required ? s : s.optional().or(z.literal(""));
       break;
     }
     case "radio":
     case "select": {
-      const s = z.string().min(1, REQUIRED_MSG);
+      const s = z.string({ error: REQUIRED_MSG }).min(1, REQUIRED_MSG);
       schema = field.is_required ? s : s.optional().or(z.literal(""));
       break;
     }
     case "checkbox": {
-      const s = z.array(z.string());
+      const s = z.array(z.string(), { error: REQUIRED_MSG });
       schema = field.is_required ? s.min(1, REQUIRED_MSG) : s.optional();
       break;
     }
     case "location": {
-      const locationSchema = z.object({
-        latitude: z.number(),
-        longitude: z.number(),
-        accuracy: z.number(),
-        capturedAt: z.string(),
-      });
+      const locationSchema = z.object(
+        {
+          latitude: z.number(),
+          longitude: z.number(),
+          accuracy: z.number(),
+          capturedAt: z.string(),
+        },
+        { error: REQUIRED_MSG }
+      );
       schema = field.is_required ? locationSchema : locationSchema.optional().nullable();
       break;
     }
