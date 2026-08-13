@@ -126,13 +126,18 @@ export default async function DashboardOverviewPage() {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {recentSubmissions.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between py-3">
-                    <span className="text-sm text-slate-700">
-                      {formTitleById.get(s.form_id) ?? "نموذج"}
-                    </span>
-                    <span className="text-xs text-slate-400" dir="ltr">
-                      {new Date(s.submitted_at).toLocaleString("ar-MA")}
-                    </span>
+                  <li key={s.id}>
+                    <Link
+                      href={`/dashboard/forms/${s.form_id}/responses`}
+                      className="flex items-center justify-between py-3 hover:text-brand-600"
+                    >
+                      <span className="text-sm text-slate-700">
+                        {formTitleById.get(s.form_id) ?? "نموذج"}
+                      </span>
+                      <span className="text-xs text-slate-400" dir="ltr">
+                        {new Date(s.submitted_at).toLocaleString("ar-MA")}
+                      </span>
+                    </Link>
                   </li>
                 ))}
               </ul>

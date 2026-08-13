@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { MoreVertical, Copy, Trash2, Eye, Pause, Play, Share2, MessageSquare } from "lucide-react";
+import { MoreVertical, Copy, Trash2, Eye, Pause, Play, Share2, MessageSquare, Loader2 } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -13,40 +13,65 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleDuplicate() {
     setLoading(true);
-    await duplicateFormAction(formId);
-    router.refresh();
-    setLoading(false);
+    setError(null);
+    try {
+      await duplicateFormAction(formId);
+      router.refresh();
+    } catch {
+      setError("تعذر تكرار النموذج، حاول مرة أخرى");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleToggleStatus() {
     setLoading(true);
-    await updateFormStatusAction(formId, status === "published" ? "paused" : "published");
-    router.refresh();
-    setLoading(false);
+    setError(null);
+    try {
+      await updateFormStatusAction(formId, status === "published" ? "paused" : "published");
+      router.refresh();
+    } catch {
+      setError("تعذر تغيير حالة النموذج، حاول مرة أخرى");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDelete() {
     setLoading(true);
-    await deleteFormAction(formId);
-    setConfirmDelete(false);
-    router.refresh();
-    setLoading(false);
+    setError(null);
+    try {
+      await deleteFormAction(formId);
+      setConfirmDelete(false);
+      router.refresh();
+    } catch {
+      setError("تعذر حذف النموذج، حاول مرة أخرى");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <>
-      <Dropdown trigger={<Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>}>
-        <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/edit`)}>
+    <div className="relative inline-block">
+      <Dropdown
+        trigger={
+          <Button variant="ghost" size="icon" disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+          </Button>
+        }
+      >
+        <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/edit`)} disabled={loading}>
           <Eye className="h-4 w-4" /> تعديل ومعاينة
         </DropdownItem>
-        <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/responses`)}>
+        <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/responses`)} disabled={loading}>
           <MessageSquare className="h-4 w-4" /> عرض الردود
         </DropdownItem>
         {status !== "draft" && (
-          <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/share`)}>
+          <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/share`)} disabled={loading}>
             <Share2 className="h-4 w-4" /> مشاركة
           </DropdownItem>
         )}
@@ -62,10 +87,16 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
             <Play className="h-4 w-4" /> إعادة النشر
           </DropdownItem>
         ) : null}
-        <DropdownItem danger onClick={() => setConfirmDelete(true)}>
+        <DropdownItem danger onClick={() => setConfirmDelete(true)} disabled={loading}>
           <Trash2 className="h-4 w-4" /> حذف النموذج
         </DropdownItem>
       </Dropdown>
+
+      {error && (
+        <p className="absolute left-0 top-full z-10 mt-1 whitespace-nowrap rounded-lg bg-red-50 px-2.5 py-1 text-xs text-red-600 shadow-sm">
+          {error}
+        </p>
+      )}
 
       <Modal
         open={confirmDelete}
@@ -83,6 +114,6 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
           </Button>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }

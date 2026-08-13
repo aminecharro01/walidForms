@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, Settings, ClipboardPlus } from "lucide-react";
+import { LayoutDashboard, ClipboardList, MessageSquare, Settings, ClipboardPlus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const navItems = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/dashboard/forms", label: "النماذج", icon: ClipboardList },
+  { href: "/dashboard/responses", label: "الردود", icon: MessageSquare },
   { href: "/dashboard/forms/create", label: "جديد", icon: ClipboardPlus },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];

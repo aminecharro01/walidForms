@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Eye, GitBranch, Layers, Settings2, Share2 } from "lucide-react";
+import { ArrowRight, Eye, GitBranch, Layers, MessageSquare, Settings2, Share2 } from "lucide-react";
 import { useFormBuilderState } from "@/hooks/useFormBuilderState";
 import { useAutosave } from "@/hooks/useAutosave";
 import { FieldPalette } from "./field-palette";
@@ -92,6 +92,11 @@ export function FormBuilderClient({
         <SaveIndicator status={saveStatus} />
 
         <div className="mr-auto flex items-center gap-2">
+          <Link href={`/dashboard/forms/${form.id}/responses`}>
+            <Button variant="outline" size="sm">
+              <MessageSquare className="h-4 w-4" /> الردود
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4" /> معاينة
           </Button>

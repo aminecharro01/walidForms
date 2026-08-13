@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, AlertCircle, Loader2, ClipboardList } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, ClipboardList, ClipboardPlus } from "lucide-react";
 import { FormRenderer, useFormAnswers } from "@/components/form-renderer/form-renderer";
 import { Button } from "@/components/ui/button";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
@@ -21,7 +21,7 @@ export function PublicFormClient({
   fields: FormField[];
   conditions: Condition[];
 }) {
-  const { answers, setAnswer, errors, setErrors } = useFormAnswers();
+  const { answers, setAnswer, errors, setErrors, reset } = useFormAnswers();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -79,10 +79,17 @@ export function PublicFormClient({
       }
 
       setSubmitted(true);
+      setSubmitting(false);
     } catch {
       setSubmitError("تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت");
       setSubmitting(false);
     }
+  }
+
+  function handleFillAnother() {
+    reset();
+    setSubmitError(null);
+    setSubmitted(false);
   }
 
   if (submitted) {
@@ -95,6 +102,9 @@ export function PublicFormClient({
           تم إرسال إجابتك بنجاح
         </h1>
         <p className="mt-2 text-sm text-slate-500">شكراً لمشاركتك.</p>
+        <Button variant="outline" className="mt-6" onClick={handleFillAnother}>
+          <ClipboardPlus className="h-4 w-4" /> املأ نموذجاً جديداً
+        </Button>
       </div>
     );
   }

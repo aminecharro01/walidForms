@@ -60,5 +60,10 @@ export function useFormAnswers(initial: Record<string, unknown> = {}) {
     });
   }
 
-  return { answers, setAnswer, errors, setErrors };
+  function reset() {
+    setAnswers(initial);
+    setErrors({});
+  }
+
+  return { answers, setAnswer, errors, setErrors, reset };
 }

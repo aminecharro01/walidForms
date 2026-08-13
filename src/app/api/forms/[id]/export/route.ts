@@ -8,6 +8,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id: formId } = await params;
   const supabase = await createClient();
 
+  const dateFrom = request.nextUrl.searchParams.get("from");
+  const dateTo = request.nextUrl.searchParams.get("to");
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -67,12 +70,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let offset = 0;
 
   while (true) {
-    const { data: submissions } = await supabase
+    let query = supabase
       .from("submissions")
       .select("id, submitted_at")
       .eq("form_id", formId)
-      .order("submitted_at", { ascending: false })
-      .range(offset, offset + BATCH_SIZE - 1);
+      .order("submitted_at", { ascending: false });
+
+    if (dateFrom) query = query.gte("submitted_at", dateFrom);
+    if (dateTo) query = query.lte("submitted_at", dateTo);
+
+    const { data: submissions } = await query.range(offset, offset + BATCH_SIZE - 1);
 
     if (!submissions || submissions.length === 0) break;
 

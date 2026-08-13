@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ClipboardList,
+  MessageSquare,
   Settings,
   LogOut,
   ClipboardPlus,
@@ -15,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 const navItems = [
   { href: "/dashboard", label: "نظرة عامة", icon: LayoutDashboard },
   { href: "/dashboard/forms", label: "النماذج", icon: ClipboardList },
+  { href: "/dashboard/responses", label: "الردود", icon: MessageSquare },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 
