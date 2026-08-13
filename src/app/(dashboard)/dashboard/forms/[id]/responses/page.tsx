@@ -22,10 +22,6 @@ export default async function ResponsesPage({
   const { data: form } = await supabase.from("forms").select("*").eq("id", id).single();
   if (!form) notFound();
 
-  const versionIds = new Set<string>();
-  if (form.current_version_id) versionIds.add(form.current_version_id);
-  if (form.published_version_id) versionIds.add(form.published_version_id);
-
   const { data: submissions } = await supabase
     .from("submissions")
     .select("id, submitted_at, form_version_id")
@@ -33,6 +29,16 @@ export default async function ResponsesPage({
     .order("submitted_at", { ascending: false });
 
   const submissionIds = (submissions ?? []).map((s) => s.id);
+
+  // Toutes les versions réellement référencées par les soumissions, pas seulement
+  // la version courante/publiée : après modification d'un formulaire déjà publié,
+  // les anciennes réponses restent liées à des champs d'une version précédente.
+  const versionIds = new Set<string>();
+  if (form.current_version_id) versionIds.add(form.current_version_id);
+  if (form.published_version_id) versionIds.add(form.published_version_id);
+  for (const s of submissions ?? []) {
+    if (s.form_version_id) versionIds.add(s.form_version_id);
+  }
 
   let answersBySubmission = new Map<string, Record<string, unknown>>();
   let locationPoints: { id: string; lat: number; lng: number; label: string }[] = [];

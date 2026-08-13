@@ -29,9 +29,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "النموذج غير موجود" }, { status: 404 });
   }
 
+  // Toutes les versions réellement référencées par les soumissions, pas seulement
+  // la version courante/publiée : après modification d'un formulaire déjà publié,
+  // les anciennes réponses restent liées à des champs d'une version précédente.
   const versionIds = new Set<string>();
   if (form.current_version_id) versionIds.add(form.current_version_id);
   if (form.published_version_id) versionIds.add(form.published_version_id);
+  const { data: submissionVersions } = await supabase
+    .from("submissions")
+    .select("form_version_id")
+    .eq("form_id", formId);
+  for (const s of submissionVersions ?? []) {
+    if (s.form_version_id) versionIds.add(s.form_version_id);
+  }
 
   const fieldsMap = new Map<string, Awaited<ReturnType<typeof loadFullVersion>>["fields"][number]>();
   for (const versionId of versionIds) {

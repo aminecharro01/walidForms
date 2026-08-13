@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash, randomUUID } from "crypto";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { loadFullVersion } from "@/lib/supabase/forms";
 import { sanitizeAnswersToVisibleFields } from "@/lib/conditions/engine";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
@@ -162,6 +162,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { error: answersError } = await supabase.from("submission_answers").insert(answerRows);
     if (answersError) {
       console.error("submit: insert submission_answers failed", answersError);
+      // Compense l'absence de transaction : sans ce nettoyage, la ligne submissions créée
+      // juste avant resterait en base sans aucune réponse (soumission "vide" fantôme).
+      // Client service_role requis : RLS interdit à un visiteur anonyme de supprimer une
+      // soumission (submissions_delete_own est réservée au propriétaire du formulaire).
+      await createServiceRoleClient().from("submissions").delete().eq("id", submissionId);
       return NextResponse.json({ error: t("public.answersSaveFailed") }, { status: 500 });
     }
   }

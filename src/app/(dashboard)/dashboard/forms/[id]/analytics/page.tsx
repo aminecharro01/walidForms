@@ -25,7 +25,7 @@ export default async function AnalyticsPage({
 
   const { data: submissions } = await supabase
     .from("submissions")
-    .select("id, submitted_at")
+    .select("id, submitted_at, form_version_id")
     .eq("form_id", id)
     .order("submitted_at", { ascending: true });
 
@@ -51,10 +51,14 @@ export default async function AnalyticsPage({
   }
   const dailyData = [...dailyMap.entries()].map(([date, count]) => ({ date, count }));
 
-  // Champs à choix (radio/checkbox/select) pour distributions
+  // Champs à choix (radio/checkbox/select) pour distributions — toutes les versions
+  // réellement référencées par les soumissions, pas seulement la version courante/publiée.
   const versionIds = new Set<string>();
   if (form.current_version_id) versionIds.add(form.current_version_id);
   if (form.published_version_id) versionIds.add(form.published_version_id);
+  for (const s of submissions ?? []) {
+    if (s.form_version_id) versionIds.add(s.form_version_id);
+  }
 
   const fieldsMap = new Map<string, Awaited<ReturnType<typeof loadFullVersion>>["fields"][number]>();
   for (const versionId of versionIds) {
