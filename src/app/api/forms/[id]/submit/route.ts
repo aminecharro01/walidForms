@@ -124,6 +124,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .single();
 
   if (submissionError || !submission) {
+    console.error("submit: insert submissions failed", submissionError);
     return NextResponse.json({ error: "تعذر إرسال الرد، الرجاء المحاولة مرة أخرى" }, { status: 500 });
   }
 
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (answerRows.length > 0) {
     const { error: answersError } = await supabase.from("submission_answers").insert(answerRows);
     if (answersError) {
+      console.error("submit: insert submission_answers failed", answersError);
       return NextResponse.json({ error: "تعذر حفظ الإجابات" }, { status: 500 });
     }
   }

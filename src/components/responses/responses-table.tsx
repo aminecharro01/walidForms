@@ -44,16 +44,6 @@ export function ResponsesTable({
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (submissions.length === 0) {
-    return (
-      <EmptyState
-        icon={MessageSquare}
-        title="لا توجد ردود بعد"
-        description="ستظهر هنا الردود فور استلامها من المستخدمين"
-      />
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -76,6 +66,14 @@ export function ResponsesTable({
         </a>
       </div>
 
+      {submissions.length === 0 ? (
+        <EmptyState
+          icon={MessageSquare}
+          title="لا توجد ردود بعد"
+          description="ستظهر هنا الردود فور استلامها من المستخدمين"
+        />
+      ) : (
+        <>
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
         <table className="w-full text-right text-sm">
           <thead>
@@ -141,6 +139,8 @@ export function ResponsesTable({
             </Button>
           </div>
         </div>
+      )}
+        </>
       )}
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title="تفاصيل الرد" size="md">
