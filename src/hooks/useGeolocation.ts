@@ -46,7 +46,7 @@ export function useGeolocation() {
           setErrorMessage("حدث خطأ غير متوقع أثناء تحديد الموقع.");
         }
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
     );
   }, []);
 
