@@ -75,8 +75,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   });
   sheet.getRow(1).height = 24;
 
-  // Pagination par lots de 500 pour rester dans les limites mémoire du free tier
-  const BATCH_SIZE = 500;
+  // Pagination par petits lots : limite la mémoire ET évite qu'un filtre .in(...)
+  // avec trop d'identifiants dépasse les limites de longueur d'URL de l'infrastructure.
+  const BATCH_SIZE = 150;
   let offset = 0;
 
   while (true) {
@@ -94,10 +95,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!submissions || submissions.length === 0) break;
 
     const submissionIds = submissions.map((s) => s.id);
-    const { data: answers } = await supabase
+    const { data: answers, error: answersError } = await supabase
       .from("submission_answers")
       .select("submission_id, field_id, value_json, location_lat, location_lng, location_accuracy")
       .in("submission_id", submissionIds);
+
+    if (answersError) {
+      console.error("export: fetch submission_answers batch failed", answersError);
+    }
 
     const answersBySubmission = new Map<string, typeof answers>();
     for (const a of answers ?? []) {

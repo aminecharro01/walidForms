@@ -8,6 +8,9 @@ import { ResponsesLineChart } from "@/components/charts/responses-line-chart";
 import { DistributionBarChart } from "@/components/charts/distribution-bar-chart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getServerT } from "@/lib/i18n/server";
+import { chunk } from "@/lib/utils/chunk";
+
+const IN_CHUNK_SIZE = 150;
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +78,21 @@ export default async function AnalyticsPage({
   let locationCount = 0;
 
   if (submissionIds.length > 0) {
-    const { data: answers } = await supabase
-      .from("submission_answers")
-      .select("field_id, value_json, location_lat")
-      .in("submission_id", submissionIds);
+    const answers: { field_id: string; value_json: unknown; location_lat: number | null }[] = [];
+    for (const idsBatch of chunk(submissionIds, IN_CHUNK_SIZE)) {
+      const { data, error } = await supabase
+        .from("submission_answers")
+        .select("field_id, value_json, location_lat")
+        .in("submission_id", idsBatch);
+      if (error) {
+        console.error("analytics: fetch submission_answers batch failed", error);
+        continue;
+      }
+      answers.push(...(data ?? []));
+    }
 
     distributionsByField = new Map();
-    for (const a of answers ?? []) {
+    for (const a of answers) {
       const field = fieldsMap.get(a.field_id);
       if (!field || !["radio", "checkbox", "select"].includes(field.type)) continue;
 
@@ -96,7 +107,7 @@ export default async function AnalyticsPage({
       }
     }
 
-    locationCount = (answers ?? []).filter((a) => a.location_lat !== null).length;
+    locationCount = answers.filter((a) => a.location_lat !== null).length;
   }
 
   return (

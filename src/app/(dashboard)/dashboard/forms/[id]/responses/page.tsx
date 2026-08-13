@@ -6,7 +6,10 @@ import { ResponsesTable } from "@/components/responses/responses-table";
 import { ResponsesMap } from "@/components/maps/responses-map";
 import { Card } from "@/components/ui/card";
 import { formatDateFr } from "@/lib/utils/format";
+import { chunk } from "@/lib/utils/chunk";
 import { getServerT } from "@/lib/i18n/server";
+
+const IN_CHUNK_SIZE = 150;
 
 export const dynamic = "force-dynamic";
 
@@ -44,18 +47,32 @@ export default async function ResponsesPage({
   let locationPoints: { id: string; lat: number; lng: number; label: string }[] = [];
 
   if (submissionIds.length > 0) {
-    const { data: answers } = await supabase
-      .from("submission_answers")
-      .select("submission_id, field_id, value_json, location_lat, location_lng")
-      .in("submission_id", submissionIds);
+    const answers: {
+      submission_id: string;
+      field_id: string;
+      value_json: unknown;
+      location_lat: number | null;
+      location_lng: number | null;
+    }[] = [];
+    for (const idsBatch of chunk(submissionIds, IN_CHUNK_SIZE)) {
+      const { data, error } = await supabase
+        .from("submission_answers")
+        .select("submission_id, field_id, value_json, location_lat, location_lng")
+        .in("submission_id", idsBatch);
+      if (error) {
+        console.error("responses page: fetch submission_answers batch failed", error);
+        continue;
+      }
+      answers.push(...(data ?? []));
+    }
 
     answersBySubmission = new Map();
-    for (const a of answers ?? []) {
+    for (const a of answers) {
       if (!answersBySubmission.has(a.submission_id)) answersBySubmission.set(a.submission_id, {});
       answersBySubmission.get(a.submission_id)![a.field_id] = a.value_json;
     }
 
-    locationPoints = (answers ?? [])
+    locationPoints = answers
       .filter((a) => a.location_lat !== null && a.location_lng !== null)
       .map((a) => ({
         id: a.submission_id + a.field_id,
