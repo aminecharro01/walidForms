@@ -4,7 +4,9 @@ import { useState } from "react";
 import { CheckCircle2, AlertCircle, Loader2, ClipboardList, ClipboardPlus } from "lucide-react";
 import { FormRenderer, useFormAnswers } from "@/components/form-renderer/form-renderer";
 import { Button } from "@/components/ui/button";
+import { LinkedinIcon } from "@/components/ui/linkedin-icon";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
+import { translate, dirFor, type Locale } from "@/lib/i18n/dictionaries";
 import type { FormField } from "@/types/form";
 import type { Condition } from "@/types/condition";
 
@@ -12,15 +14,19 @@ export function PublicFormClient({
   publicSlug,
   title,
   description,
+  language,
   fields,
   conditions,
 }: {
   publicSlug: string;
   title: string;
   description?: string | null;
+  language: Locale;
   fields: FormField[];
   conditions: Condition[];
 }) {
+  const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
+  const dir = dirFor(language);
   const { answers, setAnswer, errors, setErrors, reset } = useFormAnswers();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -30,7 +36,7 @@ export function PublicFormClient({
     e.preventDefault();
     setSubmitError(null);
 
-    const schema = buildFormSchema(fields);
+    const schema = buildFormSchema(fields, language);
     const result = schema.safeParse(answers);
 
     if (!result.success) {
@@ -73,7 +79,7 @@ export function PublicFormClient({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setSubmitError(data.error || "حدث خطأ أثناء إرسال النموذج، الرجاء المحاولة مرة أخرى");
+        setSubmitError(data.error || t("public.genericError"));
         setSubmitting(false);
         return;
       }
@@ -81,7 +87,7 @@ export function PublicFormClient({
       setSubmitted(true);
       setSubmitting(false);
     } catch {
-      setSubmitError("تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت");
+      setSubmitError(t("public.connectionError"));
       setSubmitting(false);
     }
   }
@@ -94,23 +100,26 @@ export function PublicFormClient({
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-white to-slate-50 px-4 text-center animate-fade-in">
+      <div
+        dir={dir}
+        className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-white to-slate-50 px-4 text-center animate-fade-in"
+      >
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h1 className="mt-5 font-[family-name:var(--font-cairo)] text-xl font-bold text-slate-900">
-          تم إرسال إجابتك بنجاح
+          {t("public.submitSuccess")}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">شكراً لمشاركتك.</p>
+        <p className="mt-2 text-sm text-slate-500">{t("public.submitThanks")}</p>
         <Button variant="outline" className="mt-6" onClick={handleFillAnother}>
-          <ClipboardPlus className="h-4 w-4" /> املأ نموذجاً جديداً
+          <ClipboardPlus className="h-4 w-4" /> {t("public.fillAnother")}
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-slate-50 px-4 py-8 sm:py-12">
+    <div dir={dir} className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-slate-50 px-4 py-8 sm:py-12">
       <form onSubmit={handleSubmit} className="mx-auto max-w-xl">
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white">
@@ -144,15 +153,26 @@ export function PublicFormClient({
           <Button type="submit" className="mt-6 w-full" size="lg" loading={submitting}>
             {submitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> جارٍ الإرسال...
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("public.submitting")}
               </>
             ) : (
-              "إرسال"
+              t("public.submit")
             )}
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">مدعوم بواسطة منصة النماذج</p>
+        <p className="mt-6 text-center text-xs text-slate-400">
+          {t("public.poweredBy")} WalidForms — {t("public.by")}{" "}
+          <a
+            href="https://www.linkedin.com/in/charroamine/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline"
+          >
+            <LinkedinIcon className="h-3.5 w-3.5" />
+            Amine Charro
+          </a>
+        </p>
       </form>
     </div>
   );

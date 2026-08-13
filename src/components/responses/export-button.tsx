@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 function extractFilename(disposition: string | null, fallback: string): string {
   if (!disposition) return fallback;
@@ -19,6 +20,7 @@ export function ExportButton({
   dateFrom?: string;
   dateTo?: string;
 }) {
+  const { t } = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -54,9 +56,9 @@ export function ExportButton({
   return (
     <div className="flex flex-col items-end gap-1">
       <Button variant="outline" size="sm" onClick={handleExport} loading={loading}>
-        <Download className="h-4 w-4" /> تصدير إلى Excel
+        <Download className="h-4 w-4" /> {t("resp.export")}
       </Button>
-      {error && <span className="text-xs text-red-600">تعذر التصدير، حاول مرة أخرى</span>}
+      {error && <span className="text-xs text-red-600">{t("resp.exportError")}</span>}
     </div>
   );
 }

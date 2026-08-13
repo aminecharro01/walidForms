@@ -7,6 +7,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ResponsesLineChart } from "@/components/charts/responses-line-chart";
 import { DistributionBarChart } from "@/components/charts/distribution-bar-chart";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getServerT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function AnalyticsPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { t } = await getServerT();
 
   const { data: form } = await supabase.from("forms").select("*").eq("id", id).single();
   if (!form) notFound();
@@ -44,7 +46,7 @@ export default async function AnalyticsPage({
   for (const s of submissions ?? []) {
     const d = new Date(s.submitted_at);
     if (d < last30) continue;
-    const key = d.toLocaleDateString("ar-MA", { month: "short", day: "numeric" });
+    const key = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
     dailyMap.set(key, (dailyMap.get(key) ?? 0) + 1);
   }
   const dailyData = [...dailyMap.entries()].map(([date, count]) => ({ date, count }));
@@ -97,26 +99,30 @@ export default async function AnalyticsPage({
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          التحليلات
+          {t("analytics.title")}
         </h1>
         <p className="mt-1 text-sm text-slate-500">{form.title}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="إجمالي الردود" value={total.toLocaleString("ar")} icon={MessageSquare} tone="brand" />
-        <StatCard label="الردود اليوم" value={todayCount} icon={BarChart3} tone="amber" />
-        <StatCard label="آخر 7 أيام" value={weekCount} icon={BarChart3} tone="sky" />
+        <StatCard label={t("dash.totalResponses")} value={total.toLocaleString()} icon={MessageSquare} tone="brand" />
+        <StatCard label={t("dash.todayResponses")} value={todayCount} icon={BarChart3} tone="amber" />
+        <StatCard label={t("analytics.last7days")} value={weekCount} icon={BarChart3} tone="sky" />
         {locationFieldExists && (
-          <StatCard label="ردود بموقع جغرافي" value={locationCount} icon={MapPinIcon} tone="emerald" />
+          <StatCard label={t("analytics.withLocation")} value={locationCount} icon={MapPinIcon} tone="emerald" />
         )}
       </div>
 
       <Card className="p-5">
         <h2 className="mb-4 font-[family-name:var(--font-cairo)] text-base font-semibold text-slate-900">
-          الردود عبر الزمن
+          {t("analytics.overTime")}
         </h2>
         {dailyData.length === 0 ? (
-          <EmptyState icon={BarChart3} title="لا توجد بيانات كافية" description="ستظهر الرسوم البيانية مع تراكم الردود" />
+          <EmptyState
+            icon={BarChart3}
+            title={t("analytics.notEnoughData")}
+            description={t("analytics.notEnoughDataDesc")}
+          />
         ) : (
           <ResponsesLineChart data={dailyData} />
         )}
@@ -136,7 +142,7 @@ export default async function AnalyticsPage({
                   {field.label}
                 </h3>
                 {data.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-slate-400">لا توجد إجابات بعد</p>
+                  <p className="py-8 text-center text-sm text-slate-400">{t("analytics.noAnswers")}</p>
                 ) : (
                   <DistributionBarChart data={data} />
                 )}

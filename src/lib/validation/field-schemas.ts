@@ -1,12 +1,13 @@
 import { z } from "zod";
 import type { FormField } from "@/types/form";
+import { translate, type Locale } from "@/lib/i18n/dictionaries";
 
-const REQUIRED_MSG = "هذا الحقل مطلوب";
-const EMAIL_MSG = "البريد الإلكتروني غير صالح";
-const NUMBER_MSG = "الرجاء إدخال رقم صالح";
+/** Construit un schéma Zod dynamique à partir de la définition d'un champ, dans la langue du formulaire. */
+export function buildFieldSchema(field: FormField, locale: Locale = "ar"): z.ZodTypeAny {
+  const REQUIRED_MSG = translate(locale, "public.requiredField");
+  const EMAIL_MSG = translate(locale, "public.invalidEmail");
+  const NUMBER_MSG = translate(locale, "public.invalidNumber");
 
-/** Construit un schéma Zod dynamique à partir de la définition d'un champ. */
-export function buildFieldSchema(field: FormField): z.ZodTypeAny {
   let schema: z.ZodTypeAny;
 
   switch (field.type) {
@@ -73,10 +74,10 @@ export function buildFieldSchema(field: FormField): z.ZodTypeAny {
   return schema;
 }
 
-export function buildFormSchema(fields: FormField[]) {
+export function buildFormSchema(fields: FormField[], locale: Locale = "ar") {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
-    shape[field.id] = buildFieldSchema(field);
+    shape[field.id] = buildFieldSchema(field, locale);
   }
   return z.object(shape);
 }

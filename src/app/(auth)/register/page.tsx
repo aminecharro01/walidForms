@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth-schemas";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const {
@@ -33,9 +35,7 @@ export default function RegisterPage() {
 
     if (error) {
       setServerError(
-        error.message.includes("already registered")
-          ? "هذا البريد الإلكتروني مسجل مسبقاً"
-          : "حدث خطأ أثناء إنشاء الحساب، الرجاء المحاولة مرة أخرى"
+        error.message.includes("already registered") ? t("auth.emailTaken") : t("auth.registerError")
       );
       return;
     }
@@ -56,13 +56,11 @@ export default function RegisterPage() {
             <CheckCircle2 className="h-7 w-7" />
           </div>
           <h1 className="mt-4 font-[family-name:var(--font-cairo)] text-lg font-bold text-slate-900">
-            تحقق من بريدك الإلكتروني
+            {t("auth.checkEmailTitle")}
           </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            أرسلنا رابط تأكيد إلى بريدك الإلكتروني. الرجاء تأكيد حسابك لتتمكن من تسجيل الدخول.
-          </p>
+          <p className="mt-2 text-sm text-slate-500">{t("auth.checkEmailDesc")}</p>
           <Link href="/login" className="mt-6">
-            <Button variant="outline">العودة إلى تسجيل الدخول</Button>
+            <Button variant="outline">{t("auth.backToLogin")}</Button>
           </Link>
         </CardContent>
       </Card>
@@ -73,9 +71,9 @@ export default function RegisterPage() {
     <Card>
       <CardContent className="p-6 sm:p-8">
         <h1 className="font-[family-name:var(--font-cairo)] text-xl font-bold text-slate-900">
-          إنشاء حساب جديد
+          {t("auth.registerTitle")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">ابدأ بإنشاء نماذجك الأولى في دقائق</p>
+        <p className="mt-1 text-sm text-slate-500">{t("auth.registerSubtitle")}</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           {serverError && (
@@ -86,7 +84,7 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <Label htmlFor="fullName">الاسم الكامل</Label>
+            <Label htmlFor="fullName">{t("auth.fullName")}</Label>
             <div className="relative">
               <User className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input id="fullName" placeholder="محمد أحمد" className="pr-10" {...register("fullName")} />
@@ -95,7 +93,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <div className="relative">
               <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -110,7 +108,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="password">كلمة المرور</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <div className="relative">
               <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -125,7 +123,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
+            <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
             <div className="relative">
               <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -140,14 +138,14 @@ export default function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full" loading={isSubmitting}>
-            إنشاء الحساب
+            {t("auth.registerTitle")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          لديك حساب بالفعل؟{" "}
+          {t("auth.hasAccount")}{" "}
           <Link href="/login" className="font-medium text-brand-600 hover:underline">
-            تسجيل الدخول
+            {t("auth.loginTitle")}
           </Link>
         </p>
       </CardContent>

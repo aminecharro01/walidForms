@@ -5,6 +5,8 @@ import { loadFullVersion } from "@/lib/supabase/forms";
 import { ResponsesTable } from "@/components/responses/responses-table";
 import { ResponsesMap } from "@/components/maps/responses-map";
 import { Card } from "@/components/ui/card";
+import { formatDateFr } from "@/lib/utils/format";
+import { getServerT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ export default async function ResponsesPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { t } = await getServerT();
 
   const { data: form } = await supabase.from("forms").select("*").eq("id", id).single();
   if (!form) notFound();
@@ -52,9 +55,10 @@ export default async function ResponsesPage({
         id: a.submission_id + a.field_id,
         lat: a.location_lat as number,
         lng: a.location_lng as number,
-        label: `رد بتاريخ ${new Date(
-          submissions?.find((s) => s.id === a.submission_id)?.submitted_at ?? ""
-        ).toLocaleDateString("ar-MA")}`,
+        label: `${t("resp.responseDated")} ${formatDateFr(
+          submissions?.find((s) => s.id === a.submission_id)?.submitted_at ?? "",
+          { withTime: false }
+        )}`,
       }));
   }
 
@@ -76,10 +80,10 @@ export default async function ResponsesPage({
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          الردود
+          {t("resp.title")}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          {form.title} — إجمالي {rows.length.toLocaleString("ar")} رد
+          {form.title} — {t("resp.totalPrefix")} {rows.length.toLocaleString()} {t("forms.responseCount")}
         </p>
       </div>
 
@@ -87,7 +91,7 @@ export default async function ResponsesPage({
         <Card className="p-5">
           <h2 className="mb-3 flex items-center gap-2 font-[family-name:var(--font-cairo)] text-base font-semibold text-slate-900">
             <MapPin className="h-4.5 w-4.5 text-brand-600" />
-            خريطة الردود
+            {t("resp.locationMap")}
           </h2>
           <ResponsesMap points={locationPoints} />
         </Card>

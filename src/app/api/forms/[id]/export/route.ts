@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
 import { loadFullVersion } from "@/lib/supabase/forms";
-import { formatAnswerValue } from "@/lib/utils/format";
+import { formatAnswerValue, formatDateFr } from "@/lib/utils/format";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: formId } = await params;
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const submissionAnswers = answersBySubmission.get(submission.id) ?? [];
       const rowData: Record<string, unknown> = {
         id: submission.id.slice(0, 8),
-        submitted_at: new Date(submission.submitted_at).toLocaleString("ar-MA"),
+        submitted_at: formatDateFr(submission.submitted_at),
       };
 
       let locRow: { lat?: number; lng?: number; accuracy?: number } = {};

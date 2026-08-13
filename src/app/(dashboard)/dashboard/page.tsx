@@ -5,12 +5,20 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FORM_STATUS_LABELS_AR, type FormStatus } from "@/types/form";
+import type { FormStatus } from "@/types/form";
+import { formatDateFr } from "@/lib/utils/format";
+import { getServerT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardOverviewPage() {
   const supabase = await createClient();
+  const { t } = await getServerT();
+  const statusLabel: Record<FormStatus, string> = {
+    draft: t("forms.statusDraft"),
+    published: t("forms.statusPublished"),
+    paused: t("forms.statusPaused"),
+  };
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -60,34 +68,39 @@ export default async function DashboardOverviewPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          لوحة التحكم
+          {t("dash.title")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">نظرة عامة على نماذجك وأنشطتك</p>
+        <p className="mt-1 text-sm text-slate-500">{t("dash.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="إجمالي النماذج" value={totalForms} icon={ClipboardList} tone="brand" />
-        <StatCard label="النماذج المنشورة" value={publishedForms} icon={CheckCircle2} tone="emerald" />
-        <StatCard label="إجمالي الردود" value={totalSubmissions.toLocaleString("ar")} icon={MessageSquare} tone="sky" />
-        <StatCard label="الردود اليوم" value={todaySubmissions} icon={CalendarClock} tone="amber" />
+        <StatCard label={t("dash.totalForms")} value={totalForms} icon={ClipboardList} tone="brand" />
+        <StatCard label={t("dash.publishedForms")} value={publishedForms} icon={CheckCircle2} tone="emerald" />
+        <StatCard
+          label={t("dash.totalResponses")}
+          value={totalSubmissions.toLocaleString()}
+          icon={MessageSquare}
+          tone="sky"
+        />
+        <StatCard label={t("dash.todayResponses")} value={todaySubmissions} icon={CalendarClock} tone="amber" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <div className="flex items-center justify-between p-5 pb-0">
             <h2 className="font-[family-name:var(--font-cairo)] text-base font-semibold text-slate-900">
-              آخر النماذج
+              {t("dash.recentForms")}
             </h2>
             <Link href="/dashboard/forms" className="flex items-center gap-1 text-sm text-brand-600 hover:underline">
-              عرض الكل <ArrowLeft className="h-3.5 w-3.5" />
+              {t("dash.viewAll")} <ArrowLeft className="h-3.5 w-3.5" />
             </Link>
           </div>
           <CardContent>
             {!forms || forms.length === 0 ? (
               <EmptyState
                 icon={ClipboardList}
-                title="لا توجد نماذج بعد"
-                description="ابدأ بإنشاء نموذجك الأول لجمع البيانات"
+                title={t("dash.noFormsYet")}
+                description={t("dash.noFormsDesc")}
               />
             ) : (
               <ul className="divide-y divide-slate-100">
@@ -101,7 +114,7 @@ export default async function DashboardOverviewPage() {
                         form.status === "published" ? "green" : form.status === "paused" ? "amber" : "slate"
                       }
                     >
-                      {FORM_STATUS_LABELS_AR[form.status as FormStatus]}
+                      {statusLabel[form.status as FormStatus]}
                     </Badge>
                   </li>
                 ))}
@@ -113,15 +126,15 @@ export default async function DashboardOverviewPage() {
         <Card>
           <div className="p-5 pb-0">
             <h2 className="font-[family-name:var(--font-cairo)] text-base font-semibold text-slate-900">
-              الردود الأخيرة
+              {t("dash.recentResponses")}
             </h2>
           </div>
           <CardContent>
             {recentSubmissions.length === 0 ? (
               <EmptyState
                 icon={MessageSquare}
-                title="لا توجد ردود بعد"
-                description="ستظهر هنا الردود الجديدة فور استلامها"
+                title={t("dash.noResponsesYet")}
+                description={t("dash.noResponsesDesc")}
               />
             ) : (
               <ul className="divide-y divide-slate-100">
@@ -132,10 +145,10 @@ export default async function DashboardOverviewPage() {
                       className="flex items-center justify-between py-3 hover:text-brand-600"
                     >
                       <span className="text-sm text-slate-700">
-                        {formTitleById.get(s.form_id) ?? "نموذج"}
+                        {formTitleById.get(s.form_id) ?? "—"}
                       </span>
                       <span className="text-xs text-slate-400" dir="ltr">
-                        {new Date(s.submitted_at).toLocaleString("ar-MA")}
+                        {formatDateFr(s.submitted_at)}
                       </span>
                     </Link>
                   </li>

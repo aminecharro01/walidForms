@@ -6,12 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormCardMenu } from "@/components/dashboard/form-card-menu";
-import { FORM_STATUS_LABELS_AR, type FormStatus } from "@/types/form";
+import type { FormStatus } from "@/types/form";
+import { getServerT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function FormsListPage() {
   const supabase = await createClient();
+  const { t } = await getServerT();
+  const statusLabel: Record<FormStatus, string> = {
+    draft: t("forms.statusDraft"),
+    published: t("forms.statusPublished"),
+    paused: t("forms.statusPaused"),
+  };
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -40,14 +47,14 @@ export default async function FormsListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-            النماذج
+            {t("forms.title")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">إدارة جميع نماذجك في مكان واحد</p>
+          <p className="mt-1 text-sm text-slate-500">{t("forms.subtitle")}</p>
         </div>
         <Link href="/dashboard/forms/create">
           <Button>
             <ClipboardPlus className="h-4 w-4" />
-            نموذج جديد
+            {t("nav.newForm")}
           </Button>
         </Link>
       </div>
@@ -55,13 +62,13 @@ export default async function FormsListPage() {
       {!forms || forms.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="لا توجد نماذج بعد"
-          description="أنشئ نموذجك الأول لتبدأ في جمع البيانات من المستخدمين"
+          title={t("dash.noFormsYet")}
+          description={t("forms.createEmpty")}
           action={
             <Link href="/dashboard/forms/create">
               <Button>
                 <ClipboardPlus className="h-4 w-4" />
-                إنشاء نموذج
+                {t("forms.create")}
               </Button>
             </Link>
           }
@@ -85,7 +92,7 @@ export default async function FormsListPage() {
                 <Badge
                   tone={form.status === "published" ? "green" : form.status === "paused" ? "amber" : "slate"}
                 >
-                  {FORM_STATUS_LABELS_AR[form.status as FormStatus]}
+                  {statusLabel[form.status as FormStatus]}
                 </Badge>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-500">
@@ -94,14 +101,14 @@ export default async function FormsListPage() {
                   className="flex items-center gap-1.5 hover:text-brand-600 hover:underline"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  {counts.get(form.id) ?? 0} رد
+                  {counts.get(form.id) ?? 0} {t("forms.responseCount")}
                 </Link>
                 <Link
                   href={`/dashboard/forms/${form.id}/analytics`}
                   className="flex items-center gap-1.5 text-brand-600 hover:underline"
                 >
                   <BarChart3 className="h-4 w-4" />
-                  التحليلات
+                  {t("forms.analytics")}
                 </Link>
               </div>
             </Card>

@@ -14,18 +14,20 @@ import {
   Upload,
 } from "lucide-react";
 import type { FieldType } from "@/types/form";
-import { FIELD_TYPE_LABELS_AR } from "@/types/form";
+import { getFieldTypeLabels } from "@/types/form";
+import { useLocale } from "@/lib/i18n/locale-context";
+import type { DictKey } from "@/lib/i18n/dictionaries";
 
-const groups: { title: string; items: { type: FieldType; icon: typeof Type }[] }[] = [
+const groups: { titleKey: DictKey; items: { type: FieldType; icon: typeof Type }[] }[] = [
   {
-    title: "نص",
+    titleKey: "builder.groupText",
     items: [
       { type: "short_text", icon: Type },
       { type: "long_text", icon: AlignLeft },
     ],
   },
   {
-    title: "بيانات",
+    titleKey: "builder.groupData",
     items: [
       { type: "number", icon: Hash },
       { type: "email", icon: Mail },
@@ -34,7 +36,7 @@ const groups: { title: string; items: { type: FieldType; icon: typeof Type }[] }
     ],
   },
   {
-    title: "خيارات",
+    titleKey: "builder.groupChoices",
     items: [
       { type: "radio", icon: CircleDot },
       { type: "checkbox", icon: CheckSquare },
@@ -42,7 +44,7 @@ const groups: { title: string; items: { type: FieldType; icon: typeof Type }[] }
     ],
   },
   {
-    title: "متقدم",
+    titleKey: "builder.groupAdvanced",
     items: [
       { type: "location", icon: MapPin },
       { type: "file", icon: Upload },
@@ -51,11 +53,14 @@ const groups: { title: string; items: { type: FieldType; icon: typeof Type }[] }
 ];
 
 export function FieldPalette({ onAdd }: { onAdd: (type: FieldType) => void }) {
+  const { t, locale } = useLocale();
+  const labels = getFieldTypeLabels(locale);
+
   return (
     <div className="space-y-5">
       {groups.map((group) => (
-        <div key={group.title}>
-          <h4 className="mb-2 px-1 text-xs font-semibold text-slate-400">{group.title}</h4>
+        <div key={group.titleKey}>
+          <h4 className="mb-2 px-1 text-xs font-semibold text-slate-400">{t(group.titleKey)}</h4>
           <div className="space-y-1">
             {group.items.map((item) => (
               <button
@@ -64,7 +69,7 @@ export function FieldPalette({ onAdd }: { onAdd: (type: FieldType) => void }) {
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-right text-sm font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-700"
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {FIELD_TYPE_LABELS_AR[item.type]}
+                {labels[item.type]}
               </button>
             ))}
           </div>

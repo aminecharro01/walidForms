@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Cairo, Tajawal } from "next/font/google";
+import { LocaleProvider } from "@/lib/i18n/locale-context";
+import { getServerLocale } from "@/lib/i18n/server";
+import { dirFor } from "@/lib/i18n/dictionaries";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -15,20 +18,22 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "منصة النماذج | إنشاء وجمع البيانات",
+  title: "WalidForms | إنشاء وجمع البيانات",
   description:
     "منصة حديثة لإنشاء النماذج ونشرها وجمع البيانات الميدانية مع دعم الموقع الجغرافي والمنطق الشرطي.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getServerLocale();
+
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang={locale}
+      dir={dirFor(locale)}
       className={`${cairo.variable} ${tajawal.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 font-[family-name:var(--font-tajawal)] text-slate-900">
-        {children}
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

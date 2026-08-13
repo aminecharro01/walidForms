@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loadFullVersion } from "@/lib/supabase/forms";
 import { sanitizeAnswersToVisibleFields } from "@/lib/conditions/engine";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
+import { translate, type Locale } from "@/lib/i18n/dictionaries";
 import type { LocationAnswer } from "@/types/submission";
 
 // Rate limiting basique en mémoire (compatible free tier, sans service payant).
@@ -35,21 +36,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data: form } = await supabase
     .from("forms")
-    .select("id, status, published_version_id")
+    .select("id, status, language, published_version_id")
     .eq("public_slug", publicSlug)
     .single();
 
   if (!form || form.status !== "published" || !form.published_version_id) {
-    return NextResponse.json({ error: "هذا النموذج غير متاح حالياً" }, { status: 404 });
+    return NextResponse.json({ error: translate("ar", "public.notAvailable") }, { status: 404 });
   }
+
+  const formLanguage: Locale = form.language === "fr" ? "fr" : "ar";
+  const t = (key: Parameters<typeof translate>[1]) => translate(formLanguage, key);
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const rateLimitKey = `${form.id}:${ip}`;
   if (isRateLimited(rateLimitKey)) {
-    return NextResponse.json(
-      { error: "لقد تجاوزت الحد المسموح به من المحاولات، الرجاء المحاولة لاحقاً" },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: t("public.rateLimited") }, { status: 429 });
   }
 
   const contentType = request.headers.get("content-type") ?? "";
@@ -72,11 +73,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       rawAnswers = body.answers ?? {};
     }
   } catch {
-    return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
+    return NextResponse.json({ error: t("public.invalidData") }, { status: 400 });
   }
 
   if (!rawAnswers || typeof rawAnswers !== "object") {
-    return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
+    return NextResponse.json({ error: t("public.invalidData") }, { status: 400 });
   }
 
   const { fields, conditions } = await loadFullVersion(supabase, form.published_version_id);
@@ -91,11 +92,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const sanitized = sanitizeAnswersToVisibleFields(rawAnswers, fields, conditions);
 
   // Validation stricte côté serveur (ne jamais faire confiance au client)
-  const schema = buildFormSchema(fields);
+  const schema = buildFormSchema(fields, formLanguage);
   const result = schema.safeParse(sanitized);
   if (!result.success) {
     return NextResponse.json(
-      { error: "بيانات النموذج غير صالحة", details: result.error.flatten() },
+      { error: t("public.invalidFormData"), details: result.error.flatten() },
       { status: 422 }
     );
   }
@@ -103,10 +104,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Validation des fichiers
   for (const [, file] of filesByField) {
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "حجم الملف يتجاوز الحد المسموح (10 ميجابايت)" }, { status: 422 });
+      return NextResponse.json({ error: t("public.fileTooLarge") }, { status: 422 });
     }
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "نوع الملف غير مدعوم" }, { status: 422 });
+      return NextResponse.json({ error: t("public.fileTypeNotSupported") }, { status: 422 });
     }
   }
 
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (submissionError) {
     console.error("submit: insert submissions failed", submissionError);
-    return NextResponse.json({ error: "تعذر إرسال الرد، الرجاء المحاولة مرة أخرى" }, { status: 500 });
+    return NextResponse.json({ error: t("public.submitFailed") }, { status: 500 });
   }
 
   const answerRows = Object.entries(result.data)
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { error: answersError } = await supabase.from("submission_answers").insert(answerRows);
     if (answersError) {
       console.error("submit: insert submission_answers failed", answersError);
-      return NextResponse.json({ error: "تعذر حفظ الإجابات" }, { status: 500 });
+      return NextResponse.json({ error: t("public.answersSaveFailed") }, { status: 500 });
     }
   }
 

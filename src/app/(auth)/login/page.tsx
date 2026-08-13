@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, FieldError } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth-schemas";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 export default function LoginPage() {
   return (
@@ -39,6 +40,7 @@ function LoginFormSkeleton() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLocale();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -57,8 +59,8 @@ function LoginForm() {
     if (error) {
       setServerError(
         error.message === "Invalid login credentials"
-          ? "البريد الإلكتروني أو كلمة المرور غير صحيحة"
-          : "حدث خطأ أثناء تسجيل الدخول، الرجاء المحاولة مرة أخرى"
+          ? t("auth.invalidCredentials")
+          : t("auth.loginError")
       );
       return;
     }
@@ -71,9 +73,9 @@ function LoginForm() {
     <Card>
       <CardContent className="p-6 sm:p-8">
         <h1 className="font-[family-name:var(--font-cairo)] text-xl font-bold text-slate-900">
-          تسجيل الدخول
+          {t("auth.loginTitle")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">مرحباً بعودتك، سجّل الدخول لمتابعة عملك</p>
+        <p className="mt-1 text-sm text-slate-500">{t("auth.loginSubtitle")}</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           {serverError && (
@@ -84,7 +86,7 @@ function LoginForm() {
           )}
 
           <div>
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <div className="relative">
               <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -99,7 +101,7 @@ function LoginForm() {
           </div>
 
           <div>
-            <Label htmlFor="password">كلمة المرور</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <div className="relative">
               <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -114,14 +116,14 @@ function LoginForm() {
           </div>
 
           <Button type="submit" className="w-full" loading={isSubmitting}>
-            تسجيل الدخول
+            {t("auth.loginTitle")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          ليس لديك حساب؟{" "}
+          {t("auth.noAccount")}{" "}
           <Link href="/register" className="font-medium text-brand-600 hover:underline">
-            إنشاء حساب جديد
+            {t("auth.createAccount")}
           </Link>
         </p>
       </CardContent>

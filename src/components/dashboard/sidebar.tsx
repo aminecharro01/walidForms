@@ -12,17 +12,20 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { createClient } from "@/lib/supabase/client";
-
-const navItems = [
-  { href: "/dashboard", label: "نظرة عامة", icon: LayoutDashboard },
-  { href: "/dashboard/forms", label: "النماذج", icon: ClipboardList },
-  { href: "/dashboard/responses", label: "الردود", icon: MessageSquare },
-  { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
-];
+import { useLocale } from "@/lib/i18n/locale-context";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export function Sidebar({ userEmail }: { userEmail?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLocale();
+
+  const navItems = [
+    { href: "/dashboard", label: t("nav.overview"), icon: LayoutDashboard },
+    { href: "/dashboard/forms", label: t("nav.forms"), icon: ClipboardList },
+    { href: "/dashboard/responses", label: t("nav.responses"), icon: MessageSquare },
+    { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
+  ];
 
   async function handleLogout() {
     const supabase = createClient();
@@ -38,7 +41,7 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
           <ClipboardList className="h-4.5 w-4.5" />
         </div>
         <span className="font-[family-name:var(--font-cairo)] text-base font-bold text-slate-900">
-          منصة النماذج
+          WalidForms
         </span>
       </div>
 
@@ -46,7 +49,7 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
         <Link href="/dashboard/forms/create">
           <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-200 transition-colors hover:bg-brand-700">
             <ClipboardPlus className="h-4 w-4" />
-            نموذج جديد
+            {t("nav.newForm")}
           </button>
         </Link>
       </div>
@@ -73,9 +76,10 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
         })}
       </nav>
 
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-t border-slate-100 p-4 space-y-3">
+        <LanguageSwitcher className="w-full justify-center" />
         {userEmail && (
-          <p className="mb-2 truncate px-1 text-xs text-slate-400" dir="ltr">
+          <p className="truncate px-1 text-xs text-slate-400" dir="ltr">
             {userEmail}
           </p>
         )}
@@ -84,7 +88,7 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600"
         >
           <LogOut className="h-4.5 w-4.5" />
-          تسجيل الخروج
+          {t("nav.logout")}
         </button>
       </div>
     </aside>

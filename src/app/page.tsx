@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ClipboardList,
@@ -12,43 +14,26 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LinkedinIcon } from "@/components/ui/linkedin-icon";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { useLocale } from "@/lib/i18n/locale-context";
+import type { DictKey } from "@/lib/i18n/dictionaries";
 
-const features = [
-  {
-    icon: ClipboardList,
-    title: "منشئ نماذج بالسحب والإفلات",
-    description: "أنشئ نماذج احترافية بسهولة تامة عبر واجهة بديهية للسحب والإفلات، بدون أي برمجة.",
-  },
-  {
-    icon: MapPin,
-    title: "تحديد الموقع الجغرافي",
-    description: "اجمع بيانات ميدانية دقيقة مع إحداثيات GPS مباشرة من هاتف المستخدم، بموافقته الصريحة.",
-  },
-  {
-    icon: GitBranch,
-    title: "منطق شرطي متقدم",
-    description: "أظهر أو أخفِ الأسئلة تلقائياً بناءً على إجابات سابقة لتجربة أكثر ذكاءً وتخصيصاً.",
-  },
-  {
-    icon: BarChart3,
-    title: "تحليلات فورية",
-    description: "تابع نتائجك عبر رسوم بيانية تفاعلية وإحصائيات محدثة لحظياً.",
-  },
-  {
-    icon: FileSpreadsheet,
-    title: "تصدير إلى Excel",
-    description: "صدّر جميع ردودك بضغطة واحدة إلى ملف Excel منظم بعناوين عربية واضحة.",
-  },
-  {
-    icon: Smartphone,
-    title: "تجربة سلسة على الهاتف",
-    description: "نماذج مصممة أولاً للهواتف الذكية، لتجربة ملء سريعة ومريحة أينما كنت.",
-  },
+const features: { icon: typeof ClipboardList; titleKey: DictKey; descKey: DictKey }[] = [
+  { icon: ClipboardList, titleKey: "landing.feature1Title", descKey: "landing.feature1Desc" },
+  { icon: MapPin, titleKey: "landing.feature2Title", descKey: "landing.feature2Desc" },
+  { icon: GitBranch, titleKey: "landing.feature3Title", descKey: "landing.feature3Desc" },
+  { icon: BarChart3, titleKey: "landing.feature4Title", descKey: "landing.feature4Desc" },
+  { icon: FileSpreadsheet, titleKey: "landing.feature5Title", descKey: "landing.feature5Desc" },
+  { icon: Smartphone, titleKey: "landing.feature6Title", descKey: "landing.feature6Desc" },
 ];
 
-const steps = ["أنشئ", "انشر", "اجمع", "حلل", "صدّر"];
+const stepKeys: DictKey[] = ["landing.step1", "landing.step2", "landing.step3", "landing.step4", "landing.step5"];
+const trustKeys: DictKey[] = ["landing.trust1", "landing.trust2", "landing.trust3"];
 
 export default function LandingPage() {
+  const { t } = useLocale();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -59,17 +44,18 @@ export default function LandingPage() {
               <ClipboardList className="h-4.5 w-4.5" />
             </div>
             <span className="font-[family-name:var(--font-cairo)] text-lg font-bold text-slate-900">
-              منصة النماذج
+              WalidForms
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link href="/login">
               <Button variant="ghost" size="sm">
-                تسجيل الدخول
+                {t("landing.login")}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">إنشاء حساب</Button>
+              <Button size="sm">{t("landing.createAccount")}</Button>
             </Link>
           </div>
         </div>
@@ -79,39 +65,38 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-3xl text-center animate-fade-in">
           <div className="mx-auto mb-6 inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700">
-            <Zap className="h-3.5 w-3.5" /> منصة جمع بيانات حديثة
+            <Zap className="h-3.5 w-3.5" /> {t("landing.badge")}
           </div>
           <h1 className="font-[family-name:var(--font-cairo)] text-3xl font-extrabold leading-tight text-slate-900 sm:text-5xl">
-            أنشئ نماذجك بسهولة
+            {t("landing.heroTitle1")}
             <br />
-            <span className="text-brand-600">واجمع البيانات من أي مكان</span>
+            <span className="text-brand-600">{t("landing.heroTitle2")}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base text-slate-500 sm:text-lg">
-            منصة عربية متكاملة لإنشاء النماذج ونشرها وجمع البيانات الميدانية، مع دعم كامل للموقع
-            الجغرافي والمنطق الشرطي والتحليلات الفورية.
+            {t("landing.heroSubtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/register">
               <Button size="lg" className="w-full sm:w-auto">
-                ابدأ مجاناً الآن
+                {t("landing.startFree")}
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/login">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                تسجيل الدخول
+                {t("landing.login")}
               </Button>
             </Link>
           </div>
 
           <div className="mx-auto mt-14 flex max-w-xl flex-wrap items-center justify-center gap-x-8 gap-y-4">
-            {steps.map((step, i) => (
-              <div key={step} className="flex items-center gap-2">
+            {stepKeys.map((key, i) => (
+              <div key={key} className="flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
                   {i + 1}
                 </span>
                 <span className="font-[family-name:var(--font-cairo)] text-sm font-semibold text-slate-700">
-                  {step}
+                  {t(key)}
                 </span>
               </div>
             ))}
@@ -124,23 +109,21 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-xl text-center">
             <h2 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900 sm:text-3xl">
-              كل ما تحتاجه لجمع البيانات
+              {t("landing.featuresTitle")}
             </h2>
-            <p className="mt-3 text-slate-500">
-              أدوات قوية وسهلة الاستخدام مصممة خصيصاً لفرق جمع البيانات الميدانية
-            </p>
+            <p className="mt-3 text-slate-500">{t("landing.featuresSubtitle")}</p>
           </div>
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <Card key={feature.title} className="p-6 transition-shadow hover:shadow-md">
+              <Card key={feature.titleKey} className="p-6 transition-shadow hover:shadow-md">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
                   <feature.icon className="h-5.5 w-5.5" />
                 </div>
                 <h3 className="mt-4 font-[family-name:var(--font-cairo)] text-base font-semibold text-slate-900">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{feature.description}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{t(feature.descKey)}</p>
               </Card>
             ))}
           </div>
@@ -151,12 +134,12 @@ export default function LandingPage() {
       <section className="bg-slate-50 px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-[family-name:var(--font-cairo)] text-xl font-bold text-slate-900 sm:text-2xl">
-            مبني على تقنيات موثوقة ومجانية
+            {t("landing.trustTitle")}
           </h2>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
-            {["خصوصية بياناتك محمية", "بدون رسوم خفية", "أمان على مستوى المؤسسات"].map((item) => (
-              <span key={item} className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> {item}
+            {trustKeys.map((key) => (
+              <span key={key} className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> {t(key)}
               </span>
             ))}
           </div>
@@ -167,12 +150,12 @@ export default function LandingPage() {
       <section className="px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-2xl rounded-3xl bg-brand-600 px-6 py-14 text-center sm:px-12">
           <h2 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-white sm:text-3xl">
-            جاهز لبدء جمع بياناتك؟
+            {t("landing.ctaTitle")}
           </h2>
-          <p className="mt-3 text-brand-100">أنشئ حسابك المجاني الآن وابدأ في دقائق معدودة</p>
+          <p className="mt-3 text-brand-100">{t("landing.ctaSubtitle")}</p>
           <Link href="/register" className="mt-7 inline-block">
             <Button size="lg" variant="secondary" className="bg-white text-brand-700 hover:bg-slate-100">
-              إنشاء حساب مجاني
+              {t("landing.ctaButton")}
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -180,7 +163,21 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-400 sm:px-6">
-        © {new Date().getFullYear()} منصة النماذج. جميع الحقوق محفوظة.
+        <p>
+          © {new Date().getFullYear()} WalidForms. {t("landing.footerRights")}
+        </p>
+        <p className="mt-2 flex items-center justify-center gap-1.5">
+          {t("landing.footerDev")}
+          <a
+            href="https://www.linkedin.com/in/charroamine/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline"
+          >
+            <LinkedinIcon className="h-3.5 w-3.5" />
+            Amine Charro
+          </a>
+        </p>
       </footer>
     </div>
   );

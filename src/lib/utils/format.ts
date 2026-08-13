@@ -13,17 +13,23 @@ export function formatAnswerValue(value: unknown, fieldType?: string): string {
     return file.name ?? "ملف مرفق";
   }
 
+  if (fieldType === "date" && typeof value === "string") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return formatDateFr(value, { withTime: false });
+  }
+
   if (Array.isArray(value)) return value.join("، ");
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
-export function formatDateAr(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("ar-MA", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** Formate une date au format français jj-mm-aaaa [hh:mm]. */
+export function formatDateFr(dateString: string, options: { withTime?: boolean } = {}): string {
+  const { withTime = true } = options;
+  const d = new Date(dateString);
+  const datePart = `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+  if (!withTime) return datePart;
+  return `${datePart} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }

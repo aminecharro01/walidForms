@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatDateAr } from "@/lib/utils/format";
+import { formatDateFr } from "@/lib/utils/format";
+import { getServerT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function AllResponsesPage({
   const page = Math.max(1, Number(pageParam) || 1);
 
   const supabase = await createClient();
+  const { t } = await getServerT();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -51,19 +53,15 @@ export default async function AllResponsesPage({
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          جميع الردود
+          {t("resp.allTitle")}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          آخر الردود عبر جميع نماذجك — {total.toLocaleString("ar")} رد
+          {t("resp.allSubtitle")} — {total.toLocaleString()} {t("forms.responseCount")}
         </p>
       </div>
 
       {submissions.length === 0 ? (
-        <EmptyState
-          icon={MessageSquare}
-          title="لا توجد ردود بعد"
-          description="ستظهر هنا الردود فور استلامها من أي نموذج"
-        />
+        <EmptyState icon={MessageSquare} title={t("resp.noneYet")} description={t("resp.noneYetDesc")} />
       ) : (
         <Card className="overflow-hidden p-0">
           <div className="divide-y divide-slate-100">
@@ -75,10 +73,10 @@ export default async function AllResponsesPage({
               >
                 <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
                   <MessageSquare className="h-4 w-4 text-slate-400" />
-                  {formTitleById.get(s.form_id) ?? "نموذج"}
+                  {formTitleById.get(s.form_id) ?? "—"}
                 </span>
                 <span className="text-xs text-slate-400" dir="ltr">
-                  {formatDateAr(s.submitted_at)}
+                  {formatDateFr(s.submitted_at)}
                 </span>
               </Link>
             ))}
@@ -89,7 +87,7 @@ export default async function AllResponsesPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-slate-500">
           <span>
-            صفحة {page} من {totalPages}
+            {t("resp.pageOf")} {page} / {totalPages}
           </span>
           <div className="flex gap-2">
             <Link
@@ -98,7 +96,7 @@ export default async function AllResponsesPage({
               className={page === 1 ? "pointer-events-none" : undefined}
             >
               <Button variant="outline" size="sm" disabled={page === 1}>
-                <ChevronRight className="h-4 w-4" /> السابق
+                <ChevronRight className="h-4 w-4" /> {t("resp.previous")}
               </Button>
             </Link>
             <Link
@@ -107,7 +105,7 @@ export default async function AllResponsesPage({
               className={page === totalPages ? "pointer-events-none" : undefined}
             >
               <Button variant="outline" size="sm" disabled={page === totalPages}>
-                التالي <ChevronLeft className="h-4 w-4" />
+                {t("resp.next")} <ChevronLeft className="h-4 w-4" />
               </Button>
             </Link>
           </div>

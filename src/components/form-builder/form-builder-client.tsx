@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Eye, GitBranch, Layers, MessageSquare, Settings2, Share2 } from "lucide-react";
+import { ArrowRight, Eye, GitBranch, Languages, Layers, MessageSquare, Settings2, Share2 } from "lucide-react";
 import { useFormBuilderState } from "@/hooks/useFormBuilderState";
 import { useAutosave } from "@/hooks/useAutosave";
 import { FieldPalette } from "./field-palette";
@@ -16,9 +16,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
 import { saveFormMetaAction, saveVersionContentAction } from "@/app/(dashboard)/dashboard/forms/[id]/edit/actions";
 import { updateFormStatusAction } from "@/app/(dashboard)/dashboard/forms/actions";
-import type { Form, FormField, FieldType } from "@/types/form";
-import { FIELD_TYPE_LABELS_AR } from "@/types/form";
+import type { Form, FormField, FieldType, FormLanguage } from "@/types/form";
+import { getFieldTypeLabels } from "@/types/form";
 import type { Condition } from "@/types/condition";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 type Tab = "fields" | "conditions";
 
@@ -31,18 +32,20 @@ export function FormBuilderClient({
   initialFields: FormField[];
   initialConditions: Condition[];
 }) {
+  const { t } = useLocale();
   const { state, dispatch } = useFormBuilderState({ fields: initialFields, conditions: initialConditions });
   const [tab, setTab] = useState<Tab>("fields");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [title, setTitle] = useState(form.title);
   const [description, setDescription] = useState(form.description ?? "");
+  const [formLanguage, setFormLanguage] = useState<FormLanguage>(form.language ?? "ar");
   const [metaDirty, setMetaDirty] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const selectedField = state.fields.find((f) => f.id === state.selectedFieldId) ?? null;
 
   const saveStatus = useAutosave(state.dirty || metaDirty, async () => {
-    await saveFormMetaAction(form.id, title, description);
+    await saveFormMetaAction(form.id, title, description, formLanguage);
     if (form.current_version_id) {
       await saveVersionContentAction(form.current_version_id, state.fields, state.conditions);
     }
@@ -52,6 +55,7 @@ export function FormBuilderClient({
 
   async function handlePublish() {
     setPublishing(true);
+    await saveFormMetaAction(form.id, title, description, formLanguage);
     if (form.current_version_id) {
       await saveVersionContentAction(form.current_version_id, state.fields, state.conditions);
     }
@@ -84,9 +88,25 @@ export function FormBuilderClient({
               setDescription(e.target.value);
               setMetaDirty(true);
             }}
-            placeholder="أضف وصفاً للنموذج..."
+            placeholder={t("builder.descriptionPlaceholder")}
             className="max-w-xs border-none bg-transparent px-2 text-xs text-slate-400 placeholder:text-slate-300 focus:bg-slate-50 focus:outline-none"
           />
+        </div>
+
+        <div className="flex items-center gap-1.5" title={t("builder.formLanguageHint")}>
+          <Languages className="h-4 w-4 text-slate-400" />
+          <select
+            value={formLanguage}
+            onChange={(e) => {
+              setFormLanguage(e.target.value as FormLanguage);
+              setMetaDirty(true);
+            }}
+            aria-label={t("builder.formLanguage")}
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 focus:border-brand-500 focus:outline-none"
+          >
+            <option value="ar">{t("common.arabic")}</option>
+            <option value="fr">{t("common.french")}</option>
+          </select>
         </div>
 
         <SaveIndicator status={saveStatus} />
@@ -94,21 +114,21 @@ export function FormBuilderClient({
         <div className="mr-auto flex items-center gap-2">
           <Link href={`/dashboard/forms/${form.id}/responses`}>
             <Button variant="outline" size="sm">
-              <MessageSquare className="h-4 w-4" /> الردود
+              <MessageSquare className="h-4 w-4" /> {t("builder.responses")}
             </Button>
           </Link>
           <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
-            <Eye className="h-4 w-4" /> معاينة
+            <Eye className="h-4 w-4" /> {t("builder.preview")}
           </Button>
           {form.status === "published" && (
             <Link href={`/dashboard/forms/${form.id}/share`}>
               <Button variant="outline" size="sm">
-                <Share2 className="h-4 w-4" /> مشاركة
+                <Share2 className="h-4 w-4" /> {t("builder.share")}
               </Button>
             </Link>
           )}
           <Button size="sm" onClick={handlePublish} loading={publishing}>
-            {form.status === "published" ? "تحديث النشر" : "نشر النموذج"}
+            {form.status === "published" ? t("builder.republish") : t("builder.publish")}
           </Button>
         </div>
       </div>
@@ -124,10 +144,10 @@ export function FormBuilderClient({
           <div className="mx-auto max-w-2xl">
             <div className="mb-4 flex gap-1 rounded-xl bg-white p-1 shadow-sm w-fit">
               <TabButton active={tab === "fields"} onClick={() => setTab("fields")} icon={Layers}>
-                الحقول ({state.fields.length})
+                {t("builder.fields")} ({state.fields.length})
               </TabButton>
               <TabButton active={tab === "conditions"} onClick={() => setTab("conditions")} icon={GitBranch}>
-                المنطق الشرطي {state.conditions.length > 0 && `(${state.conditions.length})`}
+                {t("builder.conditions")} {state.conditions.length > 0 && `(${state.conditions.length})`}
               </TabButton>
             </div>
 
@@ -161,7 +181,7 @@ export function FormBuilderClient({
         {/* لوحة الخصائص */}
         <div className="hidden overflow-y-auto border-r border-slate-200 bg-white p-4 lg:block">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <Settings2 className="h-4 w-4" /> الخصائص
+            <Settings2 className="h-4 w-4" /> {t("builder.properties")}
           </div>
           <PropertiesPanel
             field={selectedField}
@@ -210,13 +230,16 @@ function TabButton({
 }
 
 function SaveIndicator({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
-  if (status === "saving") return <Badge tone="amber">جارٍ الحفظ...</Badge>;
-  if (status === "saved") return <Badge tone="green">تم الحفظ</Badge>;
-  if (status === "error") return <Badge tone="red">فشل الحفظ</Badge>;
-  return <Badge tone="slate">غير محفوظ</Badge>;
+  const { t } = useLocale();
+  if (status === "saving") return <Badge tone="amber">{t("builder.saving")}</Badge>;
+  if (status === "saved") return <Badge tone="green">{t("builder.savedStatus")}</Badge>;
+  if (status === "error") return <Badge tone="red">{t("builder.saveFailed")}</Badge>;
+  return <Badge tone="slate">{t("builder.unsaved")}</Badge>;
 }
 
 function FieldPaletteMobile({ onAdd }: { onAdd: (type: FieldType) => void }) {
+  const { locale } = useLocale();
+  const labels = getFieldTypeLabels(locale);
   const types: FieldType[] = [
     "short_text",
     "long_text",
@@ -237,7 +260,7 @@ function FieldPaletteMobile({ onAdd }: { onAdd: (type: FieldType) => void }) {
           onClick={() => onAdd(type)}
           className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 whitespace-nowrap"
         >
-          + {FIELD_TYPE_LABELS_AR[type]}
+          + {labels[type]}
         </button>
       ))}
     </>

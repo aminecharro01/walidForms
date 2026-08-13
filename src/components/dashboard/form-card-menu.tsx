@@ -8,9 +8,11 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { deleteFormAction, duplicateFormAction, updateFormStatusAction } from "@/app/(dashboard)/dashboard/forms/actions";
 import type { FormStatus } from "@/types/form";
+import { useLocale } from "@/lib/i18n/locale-context";
 
 export function FormCardMenu({ formId, status }: { formId: string; status: FormStatus }) {
   const router = useRouter();
+  const { t } = useLocale();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
       await duplicateFormAction(formId);
       router.refresh();
     } catch {
-      setError("تعذر تكرار النموذج، حاول مرة أخرى");
+      setError(t("forms.errorDuplicate"));
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,7 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
       await updateFormStatusAction(formId, status === "published" ? "paused" : "published");
       router.refresh();
     } catch {
-      setError("تعذر تغيير حالة النموذج، حاول مرة أخرى");
+      setError(t("forms.errorStatus"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
       setConfirmDelete(false);
       router.refresh();
     } catch {
-      setError("تعذر حذف النموذج، حاول مرة أخرى");
+      setError(t("forms.errorDelete"));
     } finally {
       setLoading(false);
     }
@@ -65,30 +67,30 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
         }
       >
         <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/edit`)} disabled={loading}>
-          <Eye className="h-4 w-4" /> تعديل ومعاينة
+          <Eye className="h-4 w-4" /> {t("forms.menu.editPreview")}
         </DropdownItem>
         <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/responses`)} disabled={loading}>
-          <MessageSquare className="h-4 w-4" /> عرض الردود
+          <MessageSquare className="h-4 w-4" /> {t("forms.menu.viewResponses")}
         </DropdownItem>
         {status !== "draft" && (
           <DropdownItem onClick={() => router.push(`/dashboard/forms/${formId}/share`)} disabled={loading}>
-            <Share2 className="h-4 w-4" /> مشاركة
+            <Share2 className="h-4 w-4" /> {t("forms.menu.share")}
           </DropdownItem>
         )}
         <DropdownItem onClick={handleDuplicate} disabled={loading}>
-          <Copy className="h-4 w-4" /> تكرار النموذج
+          <Copy className="h-4 w-4" /> {t("forms.menu.duplicate")}
         </DropdownItem>
         {status === "published" ? (
           <DropdownItem onClick={handleToggleStatus} disabled={loading}>
-            <Pause className="h-4 w-4" /> إيقاف مؤقت
+            <Pause className="h-4 w-4" /> {t("forms.menu.pause")}
           </DropdownItem>
         ) : status === "paused" ? (
           <DropdownItem onClick={handleToggleStatus} disabled={loading}>
-            <Play className="h-4 w-4" /> إعادة النشر
+            <Play className="h-4 w-4" /> {t("forms.menu.republish")}
           </DropdownItem>
         ) : null}
         <DropdownItem danger onClick={() => setConfirmDelete(true)} disabled={loading}>
-          <Trash2 className="h-4 w-4" /> حذف النموذج
+          <Trash2 className="h-4 w-4" /> {t("forms.menu.delete")}
         </DropdownItem>
       </Dropdown>
 
@@ -101,16 +103,16 @@ export function FormCardMenu({ formId, status }: { formId: string; status: FormS
       <Modal
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title="حذف النموذج"
-        description="هل أنت متأكد من حذف هذا النموذج؟ سيتم حذف جميع الردود المرتبطة به بشكل نهائي ولا يمكن التراجع عن هذا الإجراء."
+        title={t("forms.deleteConfirmTitle")}
+        description={t("forms.deleteConfirmDesc")}
         size="sm"
       >
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-            إلغاء
+            {t("common.cancel")}
           </Button>
           <Button variant="danger" onClick={handleDelete} loading={loading}>
-            حذف نهائياً
+            {t("forms.deleteFinal")}
           </Button>
         </div>
       </Modal>

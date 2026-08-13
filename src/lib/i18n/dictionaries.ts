@@ -1,0 +1,273 @@
+export type Locale = "ar" | "fr";
+
+export const LOCALES: Locale[] = ["ar", "fr"];
+export const DEFAULT_LOCALE: Locale = "ar";
+
+export function dirFor(locale: Locale): "rtl" | "ltr" {
+  return locale === "ar" ? "rtl" : "ltr";
+}
+
+const dict = {
+  // Commun
+  "common.save": { ar: "حفظ التغييرات", fr: "Enregistrer" },
+  "common.cancel": { ar: "إلغاء", fr: "Annuler" },
+  "common.delete": { ar: "حذف", fr: "Supprimer" },
+  "common.edit": { ar: "تعديل", fr: "Modifier" },
+  "common.loading": { ar: "جارٍ التحميل...", fr: "Chargement..." },
+  "common.language": { ar: "اللغة", fr: "Langue" },
+  "common.arabic": { ar: "العربية", fr: "Arabe" },
+  "common.french": { ar: "الفرنسية", fr: "Français" },
+
+  // Navigation (sidebar + mobile nav)
+  "nav.overview": { ar: "نظرة عامة", fr: "Aperçu" },
+  "nav.home": { ar: "الرئيسية", fr: "Accueil" },
+  "nav.forms": { ar: "النماذج", fr: "Formulaires" },
+  "nav.responses": { ar: "الردود", fr: "Réponses" },
+  "nav.settings": { ar: "الإعدادات", fr: "Paramètres" },
+  "nav.new": { ar: "جديد", fr: "Nouveau" },
+  "nav.newForm": { ar: "نموذج جديد", fr: "Nouveau formulaire" },
+  "nav.logout": { ar: "تسجيل الخروج", fr: "Déconnexion" },
+
+  // Landing page
+  "landing.badge": { ar: "منصة جمع بيانات حديثة", fr: "Plateforme moderne de collecte de données" },
+  "landing.heroTitle1": { ar: "أنشئ نماذجك بسهولة", fr: "Créez vos formulaires facilement" },
+  "landing.heroTitle2": { ar: "واجمع البيانات من أي مكان", fr: "et collectez des données de partout" },
+  "landing.heroSubtitle": {
+    ar: "منصة متكاملة لإنشاء النماذج ونشرها وجمع البيانات الميدانية، مع دعم كامل للموقع الجغرافي والمنطق الشرطي والتحليلات الفورية.",
+    fr: "Une plateforme complète pour créer, publier des formulaires et collecter des données de terrain, avec géolocalisation, logique conditionnelle et analyses en temps réel.",
+  },
+  "landing.startFree": { ar: "ابدأ مجاناً الآن", fr: "Commencer gratuitement" },
+  "landing.login": { ar: "تسجيل الدخول", fr: "Connexion" },
+  "landing.createAccount": { ar: "إنشاء حساب", fr: "Créer un compte" },
+  "landing.step1": { ar: "أنشئ", fr: "Créez" },
+  "landing.step2": { ar: "انشر", fr: "Publiez" },
+  "landing.step3": { ar: "اجمع", fr: "Collectez" },
+  "landing.step4": { ar: "حلل", fr: "Analysez" },
+  "landing.step5": { ar: "صدّر", fr: "Exportez" },
+  "landing.featuresTitle": { ar: "كل ما تحتاجه لجمع البيانات", fr: "Tout ce qu'il vous faut pour collecter des données" },
+  "landing.featuresSubtitle": {
+    ar: "أدوات قوية وسهلة الاستخدام مصممة خصيصاً لفرق جمع البيانات الميدانية",
+    fr: "Des outils puissants et simples, pensés pour les équipes de collecte de données terrain",
+  },
+  "landing.feature1Title": { ar: "منشئ نماذج بالسحب والإفلات", fr: "Créateur de formulaires par glisser-déposer" },
+  "landing.feature1Desc": {
+    ar: "أنشئ نماذج احترافية بسهولة تامة عبر واجهة بديهية للسحب والإفلات، بدون أي برمجة.",
+    fr: "Créez des formulaires professionnels via une interface intuitive de glisser-déposer, sans aucun code.",
+  },
+  "landing.feature2Title": { ar: "تحديد الموقع الجغرافي", fr: "Géolocalisation" },
+  "landing.feature2Desc": {
+    ar: "اجمع بيانات ميدانية دقيقة مع إحداثيات GPS مباشرة من هاتف المستخدم، بموافقته الصريحة.",
+    fr: "Collectez des données terrain précises avec les coordonnées GPS du téléphone de l'utilisateur, avec son consentement explicite.",
+  },
+  "landing.feature3Title": { ar: "منطق شرطي متقدم", fr: "Logique conditionnelle avancée" },
+  "landing.feature3Desc": {
+    ar: "أظهر أو أخفِ الأسئلة تلقائياً بناءً على إجابات سابقة لتجربة أكثر ذكاءً وتخصيصاً.",
+    fr: "Affichez ou masquez des questions automatiquement selon les réponses précédentes, pour une expérience personnalisée.",
+  },
+  "landing.feature4Title": { ar: "تحليلات فورية", fr: "Analyses en temps réel" },
+  "landing.feature4Desc": {
+    ar: "تابع نتائجك عبر رسوم بيانية تفاعلية وإحصائيات محدثة لحظياً.",
+    fr: "Suivez vos résultats via des graphiques interactifs et des statistiques mises à jour en direct.",
+  },
+  "landing.feature5Title": { ar: "تصدير إلى Excel", fr: "Export vers Excel" },
+  "landing.feature5Desc": {
+    ar: "صدّر جميع ردودك بضغطة واحدة إلى ملف Excel منظم.",
+    fr: "Exportez toutes vos réponses en un clic vers un fichier Excel organisé.",
+  },
+  "landing.feature6Title": { ar: "تجربة سلسة على الهاتف", fr: "Expérience mobile fluide" },
+  "landing.feature6Desc": {
+    ar: "نماذج مصممة أولاً للهواتف الذكية، لتجربة ملء سريعة ومريحة أينما كنت.",
+    fr: "Des formulaires pensés mobile-first, pour une expérience de remplissage rapide où que vous soyez.",
+  },
+  "landing.trustTitle": { ar: "مبني على تقنيات موثوقة ومجانية", fr: "Construit sur des technologies fiables et gratuites" },
+  "landing.trust1": { ar: "خصوصية بياناتك محمية", fr: "Vos données sont protégées" },
+  "landing.trust2": { ar: "بدون رسوم خفية", fr: "Aucun frais caché" },
+  "landing.trust3": { ar: "أمان على مستوى المؤسسات", fr: "Sécurité de niveau entreprise" },
+  "landing.ctaTitle": { ar: "جاهز لبدء جمع بياناتك؟", fr: "Prêt à commencer à collecter vos données ?" },
+  "landing.ctaSubtitle": { ar: "أنشئ حسابك المجاني الآن وابدأ في دقائق معدودة", fr: "Créez votre compte gratuit et démarrez en quelques minutes" },
+  "landing.ctaButton": { ar: "إنشاء حساب مجاني", fr: "Créer un compte gratuit" },
+  "landing.footerRights": { ar: "جميع الحقوق محفوظة.", fr: "Tous droits réservés." },
+  "landing.footerDev": { ar: "تطوير", fr: "Développé par" },
+
+  // Auth
+  "auth.loginTitle": { ar: "تسجيل الدخول", fr: "Connexion" },
+  "auth.loginSubtitle": { ar: "مرحباً بعودتك، سجّل الدخول لمتابعة عملك", fr: "Ravis de vous revoir, connectez-vous pour continuer" },
+  "auth.email": { ar: "البريد الإلكتروني", fr: "Adresse e-mail" },
+  "auth.password": { ar: "كلمة المرور", fr: "Mot de passe" },
+  "auth.confirmPassword": { ar: "تأكيد كلمة المرور", fr: "Confirmer le mot de passe" },
+  "auth.fullName": { ar: "الاسم الكامل", fr: "Nom complet" },
+  "auth.noAccount": { ar: "ليس لديك حساب؟", fr: "Vous n'avez pas de compte ?" },
+  "auth.hasAccount": { ar: "لديك حساب بالفعل؟", fr: "Vous avez déjà un compte ?" },
+  "auth.createAccount": { ar: "إنشاء حساب جديد", fr: "Créer un compte" },
+  "auth.registerTitle": { ar: "إنشاء حساب جديد", fr: "Créer un compte" },
+  "auth.registerSubtitle": { ar: "ابدأ بإنشاء نماذجك الأولى في دقائق", fr: "Créez vos premiers formulaires en quelques minutes" },
+  "auth.invalidCredentials": { ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة", fr: "E-mail ou mot de passe incorrect" },
+  "auth.loginError": { ar: "حدث خطأ أثناء تسجيل الدخول، الرجاء المحاولة مرة أخرى", fr: "Une erreur est survenue lors de la connexion, veuillez réessayer" },
+  "auth.emailTaken": { ar: "هذا البريد الإلكتروني مسجل مسبقاً", fr: "Cette adresse e-mail est déjà utilisée" },
+  "auth.registerError": { ar: "حدث خطأ أثناء إنشاء الحساب، الرجاء المحاولة مرة أخرى", fr: "Une erreur est survenue lors de la création du compte, veuillez réessayer" },
+  "auth.checkEmailTitle": { ar: "تحقق من بريدك الإلكتروني", fr: "Vérifiez votre e-mail" },
+  "auth.checkEmailDesc": {
+    ar: "أرسلنا رابط تأكيد إلى بريدك الإلكتروني. الرجاء تأكيد حسابك لتتمكن من تسجيل الدخول.",
+    fr: "Nous avons envoyé un lien de confirmation à votre adresse e-mail. Confirmez votre compte pour pouvoir vous connecter.",
+  },
+  "auth.backToLogin": { ar: "العودة إلى تسجيل الدخول", fr: "Retour à la connexion" },
+
+  // Dashboard overview
+  "dash.title": { ar: "لوحة التحكم", fr: "Tableau de bord" },
+  "dash.subtitle": { ar: "نظرة عامة على نماذجك وأنشطتك", fr: "Aperçu de vos formulaires et de votre activité" },
+  "dash.totalForms": { ar: "إجمالي النماذج", fr: "Total des formulaires" },
+  "dash.publishedForms": { ar: "النماذج المنشورة", fr: "Formulaires publiés" },
+  "dash.totalResponses": { ar: "إجمالي الردود", fr: "Total des réponses" },
+  "dash.todayResponses": { ar: "الردود اليوم", fr: "Réponses aujourd'hui" },
+  "dash.recentForms": { ar: "آخر النماذج", fr: "Derniers formulaires" },
+  "dash.viewAll": { ar: "عرض الكل", fr: "Voir tout" },
+  "dash.recentResponses": { ar: "الردود الأخيرة", fr: "Réponses récentes" },
+  "dash.noFormsYet": { ar: "لا توجد نماذج بعد", fr: "Aucun formulaire pour le moment" },
+  "dash.noFormsDesc": { ar: "ابدأ بإنشاء نموذجك الأول لجمع البيانات", fr: "Créez votre premier formulaire pour commencer à collecter des données" },
+  "dash.noResponsesYet": { ar: "لا توجد ردود بعد", fr: "Aucune réponse pour le moment" },
+  "dash.noResponsesDesc": { ar: "ستظهر هنا الردود الجديدة فور استلامها", fr: "Les nouvelles réponses apparaîtront ici dès leur réception" },
+
+  // Forms list
+  "forms.title": { ar: "النماذج", fr: "Formulaires" },
+  "forms.subtitle": { ar: "إدارة جميع نماذجك في مكان واحد", fr: "Gérez tous vos formulaires au même endroit" },
+  "forms.createEmpty": { ar: "أنشئ نموذجك الأول لتبدأ في جمع البيانات من المستخدمين", fr: "Créez votre premier formulaire pour commencer à collecter des données" },
+  "forms.create": { ar: "إنشاء نموذج", fr: "Créer un formulaire" },
+  "forms.responseCount": { ar: "رد", fr: "réponses" },
+  "forms.analytics": { ar: "التحليلات", fr: "Analyses" },
+  "forms.menu.editPreview": { ar: "تعديل ومعاينة", fr: "Modifier et prévisualiser" },
+  "forms.menu.viewResponses": { ar: "عرض الردود", fr: "Voir les réponses" },
+  "forms.menu.share": { ar: "مشاركة", fr: "Partager" },
+  "forms.menu.duplicate": { ar: "تكرار النموذج", fr: "Dupliquer le formulaire" },
+  "forms.menu.pause": { ar: "إيقاف مؤقت", fr: "Mettre en pause" },
+  "forms.menu.republish": { ar: "إعادة النشر", fr: "Republier" },
+  "forms.menu.delete": { ar: "حذف النموذج", fr: "Supprimer le formulaire" },
+  "forms.deleteConfirmTitle": { ar: "حذف النموذج", fr: "Supprimer le formulaire" },
+  "forms.deleteConfirmDesc": {
+    ar: "هل أنت متأكد من حذف هذا النموذج؟ سيتم حذف جميع الردود المرتبطة به بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.",
+    fr: "Voulez-vous vraiment supprimer ce formulaire ? Toutes les réponses associées seront définitivement supprimées, cette action est irréversible.",
+  },
+  "forms.deleteFinal": { ar: "حذف نهائياً", fr: "Supprimer définitivement" },
+  "forms.errorDuplicate": { ar: "تعذر تكرار النموذج، حاول مرة أخرى", fr: "Impossible de dupliquer le formulaire, veuillez réessayer" },
+  "forms.errorStatus": { ar: "تعذر تغيير حالة النموذج، حاول مرة أخرى", fr: "Impossible de changer le statut du formulaire, veuillez réessayer" },
+  "forms.errorDelete": { ar: "تعذر حذف النموذج، حاول مرة أخرى", fr: "Impossible de supprimer le formulaire, veuillez réessayer" },
+  "forms.statusDraft": { ar: "مسودة", fr: "Brouillon" },
+  "forms.statusPublished": { ar: "منشور", fr: "Publié" },
+  "forms.statusPaused": { ar: "متوقف", fr: "En pause" },
+
+  // Responses
+  "resp.title": { ar: "الردود", fr: "Réponses" },
+  "resp.totalPrefix": { ar: "إجمالي", fr: "Total" },
+  "resp.noneYet": { ar: "لا توجد ردود بعد", fr: "Aucune réponse pour le moment" },
+  "resp.noneYetDesc": { ar: "ستظهر هنا الردود فور استلامها من المستخدمين", fr: "Les réponses des utilisateurs apparaîtront ici dès réception" },
+  "resp.noMatch": { ar: "لا نتائج مطابقة", fr: "Aucun résultat" },
+  "resp.noMatchDesc": { ar: "جرّب تعديل كلمات البحث أو نطاق التاريخ", fr: "Essayez de modifier les termes de recherche ou la plage de dates" },
+  "resp.search": { ar: "بحث في الردود...", fr: "Rechercher dans les réponses..." },
+  "resp.dateFrom": { ar: "من تاريخ", fr: "Du" },
+  "resp.dateTo": { ar: "إلى تاريخ", fr: "Au" },
+  "resp.to": { ar: "إلى", fr: "à" },
+  "resp.export": { ar: "تصدير إلى Excel", fr: "Exporter en Excel" },
+  "resp.exportError": { ar: "تعذر التصدير، حاول مرة أخرى", fr: "Échec de l'export, veuillez réessayer" },
+  "resp.deleteSelected": { ar: "حذف المحدد", fr: "Supprimer la sélection" },
+  "resp.deleteAll": { ar: "حذف كل الردود", fr: "Supprimer toutes les réponses" },
+  "resp.deleteThis": { ar: "حذف هذا الرد", fr: "Supprimer cette réponse" },
+  "resp.deleteAllTitle": { ar: "حذف كل الردود", fr: "Supprimer toutes les réponses" },
+  "resp.deleteAllDesc": { ar: "هل أنت متأكد من حذف جميع ردود هذا النموذج؟ لا يمكن التراجع عن هذا الإجراء.", fr: "Voulez-vous vraiment supprimer toutes les réponses de ce formulaire ? Cette action est irréversible." },
+  "resp.deleteSelectedTitle": { ar: "حذف الردود المحددة", fr: "Supprimer les réponses sélectionnées" },
+  "resp.confirmDeleteCountPrefix": { ar: "هل أنت متأكد من حذف", fr: "Voulez-vous vraiment supprimer" },
+  "resp.irreversibleSuffix": {
+    ar: "؟ لا يمكن التراجع عن هذا الإجراء.",
+    fr: " ? Cette action est irréversible.",
+  },
+  "resp.deleteError": { ar: "تعذر حذف الردود، حاول مرة أخرى", fr: "Échec de la suppression, veuillez réessayer" },
+  "resp.locationSet": { ar: "محدد", fr: "Définie" },
+  "resp.selectAll": { ar: "تحديد الكل", fr: "Tout sélectionner" },
+  "resp.selectOne": { ar: "تحديد الرد", fr: "Sélectionner la réponse" },
+  "resp.date": { ar: "التاريخ", fr: "Date" },
+  "resp.previous": { ar: "السابق", fr: "Précédent" },
+  "resp.next": { ar: "التالي", fr: "Suivant" },
+  "resp.detailTitle": { ar: "تفاصيل الرد", fr: "Détail de la réponse" },
+  "resp.locationMap": { ar: "خريطة الردود", fr: "Carte des réponses" },
+  "resp.allTitle": { ar: "جميع الردود", fr: "Toutes les réponses" },
+  "resp.allSubtitle": { ar: "آخر الردود عبر جميع نماذجك", fr: "Dernières réponses sur tous vos formulaires" },
+  "resp.pageOf": { ar: "صفحة", fr: "Page" },
+  "resp.responseDated": { ar: "رد بتاريخ", fr: "Réponse du" },
+
+  // Analytics
+  "analytics.title": { ar: "التحليلات", fr: "Analyses" },
+  "analytics.last7days": { ar: "آخر 7 أيام", fr: "7 derniers jours" },
+  "analytics.withLocation": { ar: "ردود بموقع جغرافي", fr: "Réponses géolocalisées" },
+  "analytics.overTime": { ar: "الردود عبر الزمن", fr: "Réponses dans le temps" },
+  "analytics.notEnoughData": { ar: "لا توجد بيانات كافية", fr: "Pas assez de données" },
+  "analytics.notEnoughDataDesc": { ar: "ستظهر الرسوم البيانية مع تراكم الردود", fr: "Les graphiques apparaîtront à mesure que les réponses s'accumulent" },
+  "analytics.noAnswers": { ar: "لا توجد إجابات بعد", fr: "Aucune réponse pour le moment" },
+
+  // Settings
+  "settings.title": { ar: "الإعدادات", fr: "Paramètres" },
+  "settings.subtitle": { ar: "إدارة معلومات حسابك", fr: "Gérez les informations de votre compte" },
+  "settings.saved": { ar: "تم الحفظ", fr: "Enregistré" },
+  "settings.sessionTitle": { ar: "تسجيل الخروج", fr: "Déconnexion" },
+  "settings.sessionDesc": { ar: "إنهاء الجلسة الحالية على هذا الجهاز", fr: "Termine la session en cours sur cet appareil" },
+  "settings.languageTitle": { ar: "لغة الواجهة", fr: "Langue de l'interface" },
+  "settings.languageDesc": { ar: "اختر لغة عرض لوحة التحكم", fr: "Choisissez la langue d'affichage du tableau de bord" },
+
+  // Builder
+  "builder.responses": { ar: "الردود", fr: "Réponses" },
+  "builder.preview": { ar: "معاينة", fr: "Aperçu" },
+  "builder.share": { ar: "مشاركة", fr: "Partager" },
+  "builder.publish": { ar: "نشر النموذج", fr: "Publier le formulaire" },
+  "builder.republish": { ar: "تحديث النشر", fr: "Mettre à jour la publication" },
+  "builder.fields": { ar: "الحقول", fr: "Champs" },
+  "builder.conditions": { ar: "المنطق الشرطي", fr: "Logique conditionnelle" },
+  "builder.properties": { ar: "الخصائص", fr: "Propriétés" },
+  "builder.saving": { ar: "جارٍ الحفظ...", fr: "Enregistrement..." },
+  "builder.savedStatus": { ar: "تم الحفظ", fr: "Enregistré" },
+  "builder.saveFailed": { ar: "فشل الحفظ", fr: "Échec de l'enregistrement" },
+  "builder.unsaved": { ar: "غير محفوظ", fr: "Non enregistré" },
+  "builder.descriptionPlaceholder": { ar: "أضف وصفاً للنموذج...", fr: "Ajouter une description au formulaire..." },
+  "builder.formLanguage": { ar: "لغة النموذج", fr: "Langue du formulaire" },
+  "builder.groupText": { ar: "نص", fr: "Texte" },
+  "builder.groupData": { ar: "بيانات", fr: "Données" },
+  "builder.groupChoices": { ar: "خيارات", fr: "Choix" },
+  "builder.groupAdvanced": { ar: "متقدم", fr: "Avancé" },
+  "builder.formLanguageHint": {
+    ar: "تحدد لغة النموذج العامة اتجاه العرض (يمين إلى يسار أو العكس) ونصوص الواجهة الثابتة للزوار",
+    fr: "La langue du formulaire détermine le sens d'affichage (droite-à-gauche ou l'inverse) et les textes fixes de l'interface pour les visiteurs",
+  },
+
+  // Formulaire public
+  "public.notAvailable": { ar: "هذا النموذج غير متاح حالياً", fr: "Ce formulaire n'est pas disponible actuellement" },
+  "public.submit": { ar: "إرسال", fr: "Envoyer" },
+  "public.submitting": { ar: "جارٍ الإرسال...", fr: "Envoi en cours..." },
+  "public.submitSuccess": { ar: "تم إرسال إجابتك بنجاح", fr: "Votre réponse a bien été envoyée" },
+  "public.submitThanks": { ar: "شكراً لمشاركتك.", fr: "Merci pour votre participation." },
+  "public.fillAnother": { ar: "املأ نموذجاً جديداً", fr: "Remplir un nouveau formulaire" },
+  "public.genericError": { ar: "حدث خطأ أثناء إرسال النموذج، الرجاء المحاولة مرة أخرى", fr: "Une erreur est survenue lors de l'envoi, veuillez réessayer" },
+  "public.connectionError": { ar: "تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت", fr: "Impossible de contacter le serveur, vérifiez votre connexion internet" },
+  "public.poweredBy": { ar: "مدعوم بواسطة", fr: "Propulsé par" },
+  "public.by": { ar: "تطوير", fr: "Développé par" },
+  "public.requiredField": { ar: "هذا الحقل مطلوب", fr: "Ce champ est obligatoire" },
+  "public.invalidEmail": { ar: "البريد الإلكتروني غير صالح", fr: "Adresse e-mail invalide" },
+  "public.invalidNumber": { ar: "الرجاء إدخال رقم صالح", fr: "Veuillez saisir un nombre valide" },
+  "public.invalidData": { ar: "بيانات غير صالحة", fr: "Données invalides" },
+  "public.invalidFormData": { ar: "بيانات النموذج غير صالحة", fr: "Données du formulaire invalides" },
+  "public.rateLimited": {
+    ar: "لقد تجاوزت الحد المسموح به من المحاولات، الرجاء المحاولة لاحقاً",
+    fr: "Vous avez dépassé le nombre de tentatives autorisées, veuillez réessayer plus tard",
+  },
+  "public.fileTooLarge": {
+    ar: "حجم الملف يتجاوز الحد المسموح (10 ميجابايت)",
+    fr: "La taille du fichier dépasse la limite autorisée (10 Mo)",
+  },
+  "public.fileTypeNotSupported": { ar: "نوع الملف غير مدعوم", fr: "Type de fichier non pris en charge" },
+  "public.submitFailed": {
+    ar: "تعذر إرسال الرد، الرجاء المحاولة مرة أخرى",
+    fr: "Impossible d'envoyer la réponse, veuillez réessayer",
+  },
+  "public.answersSaveFailed": { ar: "تعذر حفظ الإجابات", fr: "Impossible d'enregistrer les réponses" },
+} as const satisfies Record<string, Record<Locale, string>>;
+
+export type DictKey = keyof typeof dict;
+
+export function translate(locale: Locale, key: DictKey): string {
+  return dict[key]?.[locale] ?? dict[key]?.[DEFAULT_LOCALE] ?? String(key);
+}

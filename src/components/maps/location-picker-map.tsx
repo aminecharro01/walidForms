@@ -16,15 +16,19 @@ export default function LocationPickerMap({
   latitude,
   longitude,
   accuracy,
+  draggable = false,
+  onPositionChange,
 }: {
   latitude: number;
   longitude: number;
   accuracy?: number;
+  draggable?: boolean;
+  onPositionChange?: (lat: number, lng: number) => void;
 }) {
   return (
     <MapContainer
       center={[latitude, longitude]}
-      zoom={15}
+      zoom={draggable ? 17 : 15}
       style={{ height: "220px", width: "100%", borderRadius: "12px", zIndex: 0 }}
       scrollWheelZoom={false}
     >
@@ -32,7 +36,21 @@ export default function LocationPickerMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[latitude, longitude]} icon={markerIcon}>
+      <Marker
+        position={[latitude, longitude]}
+        icon={markerIcon}
+        draggable={draggable}
+        eventHandlers={
+          draggable && onPositionChange
+            ? {
+                dragend: (e) => {
+                  const { lat, lng } = (e.target as L.Marker).getLatLng();
+                  onPositionChange(lat, lng);
+                },
+              }
+            : undefined
+        }
+      >
         {accuracy && (
           <Popup>
             دقة الموقع: {Math.round(accuracy)} متر

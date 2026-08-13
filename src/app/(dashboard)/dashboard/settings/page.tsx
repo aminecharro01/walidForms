@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { getServerT } from "@/lib/i18n/server";
 import { SettingsForm } from "./settings-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
+  const { t } = await getServerT();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -17,9 +19,9 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-lg animate-fade-in space-y-6">
       <div>
         <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          الإعدادات
+          {t("settings.title")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">إدارة معلومات حسابك</p>
+        <p className="mt-1 text-sm text-slate-500">{t("settings.subtitle")}</p>
       </div>
 
       <SettingsForm email={user!.email ?? ""} initialFullName={profile?.full_name ?? ""} />

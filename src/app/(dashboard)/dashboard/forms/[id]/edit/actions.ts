@@ -2,12 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { FormField } from "@/types/form";
+import type { FormField, FormLanguage } from "@/types/form";
 import type { Condition } from "@/types/condition";
 
-export async function saveFormMetaAction(formId: string, title: string, description: string) {
+export async function saveFormMetaAction(
+  formId: string,
+  title: string,
+  description: string,
+  language: FormLanguage
+) {
   const supabase = await createClient();
-  const { error } = await supabase.from("forms").update({ title, description }).eq("id", formId);
+  const { error } = await supabase.from("forms").update({ title, description, language }).eq("id", formId);
   if (error) throw error;
   revalidatePath(`/dashboard/forms/${formId}/edit`);
 }

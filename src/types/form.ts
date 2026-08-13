@@ -27,13 +27,28 @@ export const FIELD_TYPE_LABELS_AR: Record<FieldType, string> = {
   file: "رفع ملف",
 };
 
+export const FIELD_TYPE_LABELS_FR: Record<FieldType, string> = {
+  short_text: "Texte court",
+  long_text: "Texte long",
+  number: "Nombre",
+  email: "E-mail",
+  date: "Date",
+  time: "Heure",
+  radio: "Choix unique",
+  checkbox: "Choix multiple",
+  select: "Liste déroulante",
+  location: "Localisation",
+  file: "Fichier",
+};
+
+export function getFieldTypeLabels(locale: "ar" | "fr"): Record<FieldType, string> {
+  return locale === "fr" ? FIELD_TYPE_LABELS_FR : FIELD_TYPE_LABELS_AR;
+}
+
 export type FormStatus = "draft" | "published" | "paused";
 
-export const FORM_STATUS_LABELS_AR: Record<FormStatus, string> = {
-  draft: "مسودة",
-  published: "منشور",
-  paused: "متوقف",
-};
+/** Langue du formulaire public : détermine le sens d'affichage (rtl/ltr) et les textes système fixes. */
+export type FormLanguage = "ar" | "fr";
 
 export interface FieldOption {
   id: string;
@@ -89,6 +104,7 @@ export interface Form {
   title: string;
   description?: string | null;
   status: FormStatus;
+  language: FormLanguage;
   current_version_id: string | null;
   published_version_id: string | null;
   public_slug: string;
