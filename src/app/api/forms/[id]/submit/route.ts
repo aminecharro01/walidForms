@@ -8,10 +8,11 @@ import { translate, type Locale } from "@/lib/i18n/dictionaries";
 import type { LocationAnswer } from "@/types/submission";
 
 // Rate limiting basique en mémoire (compatible free tier, sans service payant).
-// Limite : 5 soumissions / IP / formulaire / 10 minutes.
+// Limite généreuse : surtout pour éviter qu'un bot ne remplisse le quota de stockage
+// gratuit Supabase (1 Go) avec des fichiers joints, pas pour gêner un usage normal.
 const submissionLog = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 100;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = [
   "image/png",
