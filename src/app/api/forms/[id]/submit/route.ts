@@ -12,7 +12,7 @@ import type { LocationAnswer } from "@/types/submission";
 // gratuit Supabase (1 Go) avec des fichiers joints, pas pour gêner un usage normal.
 const submissionLog = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const RATE_LIMIT_MAX = 100;
+const RATE_LIMIT_MAX = 250;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = [
   "image/png",
@@ -23,12 +23,15 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-function isRateLimited(key: string): boolean {
+function checkRateLimit(key: string): { limited: boolean; nearLimit: boolean } {
   const now = Date.now();
   const timestamps = (submissionLog.get(key) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
   timestamps.push(now);
   submissionLog.set(key, timestamps);
-  return timestamps.length > RATE_LIMIT_MAX;
+  return {
+    limited: timestamps.length > RATE_LIMIT_MAX,
+    nearLimit: timestamps.length >= RATE_LIMIT_MAX * 0.9,
+  };
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -50,7 +53,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const rateLimitKey = `${form.id}:${ip}`;
-  if (isRateLimited(rateLimitKey)) {
+  const { limited, nearLimit } = checkRateLimit(rateLimitKey);
+  if (limited) {
     return NextResponse.json({ error: t("public.rateLimited") }, { status: 429 });
   }
 
@@ -201,5 +205,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  return NextResponse.json({ success: true, submissionId });
+  return NextResponse.json({ success: true, submissionId, rateLimitWarning: nearLimit });
 }

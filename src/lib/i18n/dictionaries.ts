@@ -14,6 +14,7 @@ const dict = {
   "common.delete": { ar: "حذف", fr: "Supprimer" },
   "common.edit": { ar: "تعديل", fr: "Modifier" },
   "common.loading": { ar: "جارٍ التحميل...", fr: "Chargement..." },
+  "common.understood": { ar: "حسناً", fr: "J'ai compris" },
   "common.language": { ar: "اللغة", fr: "Langue" },
   "common.arabic": { ar: "العربية", fr: "Arabe" },
   "common.french": { ar: "الفرنسية", fr: "Français" },
@@ -264,6 +265,11 @@ const dict = {
     fr: "Impossible d'envoyer la réponse, veuillez réessayer",
   },
   "public.answersSaveFailed": { ar: "تعذر حفظ الإجابات", fr: "Impossible d'enregistrer les réponses" },
+  "public.rateLimitWarningTitle": { ar: "تنبيه", fr: "Attention" },
+  "public.rateLimitWarningDesc": {
+    ar: "لقد اقتربت من الحد الأقصى لعدد المحاولات المسموح به لهذه الساعة. إذا تجاوزته، ستحتاج إلى الانتظار قبل المحاولة مرة أخرى.",
+    fr: "Vous approchez du nombre maximal de tentatives autorisées pour cette heure. Si vous le dépassez, vous devrez patienter avant de réessayer.",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type DictKey = keyof typeof dict;

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, AlertCircle, Loader2, ClipboardList, ClipboardPlus } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Loader2, ClipboardList, ClipboardPlus } from "lucide-react";
 import { FormRenderer, useFormAnswers } from "@/components/form-renderer/form-renderer";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { LinkedinIcon } from "@/components/ui/linkedin-icon";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
 import { translate, dirFor, type Locale } from "@/lib/i18n/dictionaries";
@@ -31,6 +32,7 @@ export function PublicFormClient({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showRateLimitWarning, setShowRateLimitWarning] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,13 +79,15 @@ export function PublicFormClient({
         });
       }
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         setSubmitError(data.error || t("public.genericError"));
         setSubmitting(false);
         return;
       }
 
+      if (data.rateLimitWarning) setShowRateLimitWarning(true);
       setSubmitted(true);
       setSubmitting(false);
     } catch {
@@ -96,6 +100,7 @@ export function PublicFormClient({
     reset();
     setSubmitError(null);
     setSubmitted(false);
+    setShowRateLimitWarning(false);
   }
 
   if (submitted) {
@@ -114,6 +119,23 @@ export function PublicFormClient({
         <Button variant="outline" className="mt-6" onClick={handleFillAnother}>
           <ClipboardPlus className="h-4 w-4" /> {t("public.fillAnother")}
         </Button>
+
+        <Modal
+          open={showRateLimitWarning}
+          onClose={() => setShowRateLimitWarning(false)}
+          title={t("public.rateLimitWarningTitle")}
+          size="sm"
+        >
+          <div dir={dir} className="space-y-4 text-right">
+            <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <AlertTriangle className="h-4.5 w-4.5 shrink-0" />
+              {t("public.rateLimitWarningDesc")}
+            </div>
+            <Button className="w-full" onClick={() => setShowRateLimitWarning(false)}>
+              {t("common.understood")}
+            </Button>
+          </div>
+        </Modal>
       </div>
     );
   }
