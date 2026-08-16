@@ -96,19 +96,37 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   a.remove();
 }
 
+function DoughnutLegend({ items }: { items: { label: string; value: number; color: string; pct: number }[] }) {
+  return (
+    <div className={styles.legendGrid}>
+      {items.map((it) => (
+        <span key={it.label} className={styles.legendItem}>
+          <i className={styles.legendSwatch} style={{ background: it.color }} />
+          <span className={styles.legendLabel}>{it.label}</span>
+          <span className={styles.legendValue}>
+            {it.value} ({it.pct}%)
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function ChartPanel({
   title,
   hint,
   onDownload,
+  wide,
   children,
 }: {
   title: string;
   hint: string;
   onDownload?: () => void;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className={styles.panel}>
+    <div className={`${styles.panel} ${wide ? styles.panelWide : ""}`}>
       <div className={styles.panelHead}>
         <div>
           <h3>{title}</h3>
@@ -424,13 +442,14 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
           <div className={styles.sectionNote}>
             صنف البناية، عدد الطوابق، والحالة الوظيفية للمسكن (مسكون، مهجور، أو موسمي).
           </div>
-          <div className={styles.grid3}>
+          <div className={styles.grid2}>
             <ChartPanel
               title="صنف البناية"
               hint="تقليدية مقابل عصرية ومرافق أخرى"
               onDownload={() => downloadChart(sinfChartRef, "صنف-البناية.png")}
+              wide
             >
-              <div style={{ height: 280 }}>
+              <div style={{ height: 300 }}>
                 <Doughnut
                   ref={sinfChartRef}
                   plugins={[centerTextPlugin(String(sinfTotal))]}
@@ -441,9 +460,9 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: "62%",
+                    cutout: "64%",
                     plugins: {
-                      legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } },
+                      legend: { display: false },
                       tooltip: {
                         ...tooltipRtl,
                         callbacks: {
@@ -451,7 +470,7 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                         },
                       },
                       datalabels: {
-                        display: true,
+                        display: (ctx) => pctOf(Number(ctx.dataset.data[ctx.dataIndex]), byType) >= 7,
                         color: "#fff",
                         font: { weight: 700, size: 11 },
                         formatter: (v: number) => `${pctOf(v, byType)}%`,
@@ -460,13 +479,21 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                   }}
                 />
               </div>
+              <DoughnutLegend
+                items={byType.map((x, i) => ({
+                  label: x.label,
+                  value: x.count,
+                  color: PALETTE_SEQ[i % PALETTE_SEQ.length],
+                  pct: pctOf(x.count, byType),
+                }))}
+              />
             </ChartPanel>
             <ChartPanel
               title="عدد الطوابق"
               hint="توزيع الارتفاع العمراني للبنايات"
               onDownload={() => downloadChart(tawabiqChartRef, "عدد-الطوابق.png")}
             >
-              <div style={{ height: 280 }}>
+              <div style={{ height: 300 }}>
                 <Bar
                   ref={tawabiqChartRef}
                   data={{
@@ -478,6 +505,7 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
                     plugins: {
                       legend: { display: false },
                       tooltip: {
@@ -491,13 +519,13 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                         color: INK,
                         anchor: "end",
                         align: "top",
-                        font: { weight: 700, size: 11 },
+                        font: { weight: 700, size: 12 },
                         formatter: (v: number) => v.toLocaleString(),
                       },
                     },
                     scales: {
                       y: { grid: { color: LINE }, beginAtZero: true, ticks: { precision: 0 } },
-                      x: { grid: { display: false }, ticks: { font: { size: 10.5 } } },
+                      x: { grid: { display: false }, ticks: { font: { size: 11.5 } } },
                     },
                   }}
                 />
@@ -508,7 +536,7 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
               hint="نسبة السكن الدائم مقابل الهجرة والسكن الموسمي"
               onDownload={() => downloadChart(halaChartRef, "الحالة-الوظيفية.png")}
             >
-              <div style={{ height: 280 }}>
+              <div style={{ height: 300 }}>
                 <Doughnut
                   ref={halaChartRef}
                   plugins={[centerTextPlugin(String(halaTotal))]}
@@ -526,9 +554,9 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: "62%",
+                    cutout: "64%",
                     plugins: {
-                      legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } },
+                      legend: { display: false },
                       tooltip: {
                         ...tooltipRtl,
                         callbacks: {
@@ -539,13 +567,21 @@ export function MergedDashboardClient({ data, backHref }: { data: MergedDashboar
                       datalabels: {
                         display: true,
                         color: "#fff",
-                        font: { weight: 700, size: 11 },
+                        font: { weight: 700, size: 12 },
                         formatter: (v: number) => `${halaTotal > 0 ? Math.round((v / halaTotal) * 100) : 0}%`,
                       },
                     },
                   }}
                 />
               </div>
+              <DoughnutLegend
+                items={halaChartData.map((x) => ({
+                  label: x.label,
+                  value: x.value,
+                  color: x.color,
+                  pct: halaTotal > 0 ? Math.round((x.value / halaTotal) * 100) : 0,
+                }))}
+              />
             </ChartPanel>
           </div>
         </section>
