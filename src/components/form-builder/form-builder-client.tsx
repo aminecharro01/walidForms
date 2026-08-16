@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Eye, GitBranch, Languages, Layers, MessageSquare, Settings2, Share2 } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
 import { useFormBuilderState } from "@/hooks/useFormBuilderState";
 import { useAutosave } from "@/hooks/useAutosave";
 import { FieldPalette } from "./field-palette";
@@ -36,6 +37,7 @@ export function FormBuilderClient({
   const { state, dispatch } = useFormBuilderState({ fields: initialFields, conditions: initialConditions });
   const [tab, setTab] = useState<Tab>("fields");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [mobilePropertiesOpen, setMobilePropertiesOpen] = useState(false);
   const [title, setTitle] = useState(form.title);
   const [description, setDescription] = useState(form.description ?? "");
   const [formLanguage, setFormLanguage] = useState<FormLanguage>(form.language ?? "ar");
@@ -160,11 +162,23 @@ export function FormBuilderClient({
                 <BuilderCanvas
                   fields={state.fields}
                   selectedFieldId={state.selectedFieldId}
-                  onSelect={(id) => dispatch({ type: "SELECT_FIELD", fieldId: id })}
+                  onSelect={(id) => {
+                    dispatch({ type: "SELECT_FIELD", fieldId: id });
+                    setMobilePropertiesOpen(true);
+                  }}
                   onReorder={(fields) => dispatch({ type: "REORDER_FIELDS", fields })}
                   onDuplicate={(id) => dispatch({ type: "DUPLICATE_FIELD", fieldId: id })}
                   onDelete={(id) => dispatch({ type: "DELETE_FIELD", fieldId: id })}
                 />
+                {selectedField && (
+                  <button
+                    type="button"
+                    onClick={() => setMobilePropertiesOpen(true)}
+                    className="fixed inset-x-4 bottom-4 z-30 flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-200 lg:hidden"
+                  >
+                    <Settings2 className="h-4 w-4" /> {t("builder.properties")} — {selectedField.label}
+                  </button>
+                )}
               </>
             ) : (
               <ConditionBuilder
@@ -200,6 +214,20 @@ export function FormBuilderClient({
         fields={state.fields}
         conditions={state.conditions}
       />
+
+      <Modal
+        open={mobilePropertiesOpen && !!selectedField}
+        onClose={() => setMobilePropertiesOpen(false)}
+        title={t("builder.properties")}
+        size="md"
+      >
+        <PropertiesPanel
+          field={selectedField}
+          onChange={(patch) =>
+            selectedField && dispatch({ type: "UPDATE_FIELD", fieldId: selectedField.id, patch })
+          }
+        />
+      </Modal>
     </div>
   );
 }

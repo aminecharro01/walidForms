@@ -28,11 +28,12 @@ export function PublicFormClient({
 }) {
   const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
   const dir = dirFor(language);
-  const { answers, setAnswer, errors, setErrors, reset } = useFormAnswers();
+  const { answers, setAnswer, errors, setErrors } = useFormAnswers();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showRateLimitWarning, setShowRateLimitWarning] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +84,7 @@ export function PublicFormClient({
 
       if (!res.ok) {
         setSubmitError(data.error || t("public.genericError"));
+        setShowFailureModal(true);
         setSubmitting(false);
         return;
       }
@@ -92,15 +94,15 @@ export function PublicFormClient({
       setSubmitting(false);
     } catch {
       setSubmitError(t("public.connectionError"));
+      setShowFailureModal(true);
       setSubmitting(false);
     }
   }
 
   function handleFillAnother() {
-    reset();
-    setSubmitError(null);
-    setSubmitted(false);
-    setShowRateLimitWarning(false);
+    // Rechargement complet plutôt qu'une simple réinitialisation d'état : garantit un
+    // état totalement neuf, sans aucun résidu de la soumission précédente.
+    window.location.reload();
   }
 
   if (submitted) {
@@ -196,6 +198,18 @@ export function PublicFormClient({
           </a>
         </p>
       </form>
+
+      <Modal open={showFailureModal} onClose={() => setShowFailureModal(false)} title={t("public.submitFailedTitle")} size="sm">
+        <div dir={dir} className="space-y-4 text-right">
+          <div className="flex items-start gap-2.5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+            {submitError}
+          </div>
+          <Button className="w-full" onClick={() => setShowFailureModal(false)}>
+            {t("public.retry")}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

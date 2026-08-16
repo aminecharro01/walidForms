@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Eye, MapPin, ChevronRight, ChevronLeft, MessageSquare, Trash2 } from "lucide-react";
+import { Search, Eye, MapPin, ChevronRight, ChevronLeft, MessageSquare, Trash2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,6 +17,7 @@ interface SubmissionRow {
   id: string;
   submitted_at: string;
   answers: Record<string, unknown>;
+  usingSnapshot?: boolean;
 }
 
 const PAGE_SIZE = 10;
@@ -204,7 +205,12 @@ export function ResponsesTable({
                       #{(page - 1) * PAGE_SIZE + i + 1}
                     </span>
                   </div>
-                  <span className="text-xs text-slate-400" dir="ltr">
+                  <span className="flex items-center gap-1.5 text-xs text-slate-400" dir="ltr">
+                    {s.usingSnapshot && (
+                      <span title={t("resp.indexIncomplete")}>
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                      </span>
+                    )}
                     {formatDateFr(s.submitted_at)}
                   </span>
                 </div>
@@ -279,7 +285,14 @@ export function ResponsesTable({
                       </td>
                     ))}
                     <td className="whitespace-nowrap p-3 text-xs text-slate-400" dir="ltr">
-                      {formatDateFr(s.submitted_at)}
+                      <span className="flex items-center gap-1.5">
+                        {s.usingSnapshot && (
+                          <span title={t("resp.indexIncomplete")}>
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                          </span>
+                        )}
+                        {formatDateFr(s.submitted_at)}
+                      </span>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
@@ -337,9 +350,15 @@ export function ResponsesTable({
       <Modal open={!!detail} onClose={() => setDetail(null)} title={t("resp.detailTitle")} size="md">
         {detail && (
           <div className="space-y-4">
-            <p className="text-xs text-slate-400" dir="ltr">
+            <p className="flex items-center gap-1.5 text-xs text-slate-400" dir="ltr">
               {formatDateFr(detail.submitted_at)}
             </p>
+            {detail.usingSnapshot && (
+              <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs text-amber-700">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {t("resp.indexIncomplete")}
+              </div>
+            )}
             <dl className="divide-y divide-slate-100">
               {fields.map((f) => (
                 <div key={f.id} className="py-2.5">

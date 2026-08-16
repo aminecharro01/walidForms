@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash, randomUUID } from "crypto";
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { loadFullVersion } from "@/lib/supabase/forms";
 import { sanitizeAnswersToVisibleFields } from "@/lib/conditions/engine";
 import { buildFormSchema } from "@/lib/validation/field-schemas";
@@ -128,6 +128,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     form_version_id: form.published_version_id,
     ip_hash: ipHash,
     user_agent: request.headers.get("user-agent") ?? null,
+    // Filet de sécurité : instantané complet des réponses validées, indépendant de
+    // l'écriture détaillée par champ ci-dessous. Si celle-ci échoue, la donnée reste
+    // récupérable ici au lieu d'être perdue silencieusement.
+    answers_snapshot: result.data,
   });
 
   if (submissionError) {
@@ -165,13 +169,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (answerRows.length > 0) {
     const { error: answersError } = await supabase.from("submission_answers").insert(answerRows);
     if (answersError) {
-      console.error("submit: insert submission_answers failed", answersError);
-      // Compense l'absence de transaction : sans ce nettoyage, la ligne submissions créée
-      // juste avant resterait en base sans aucune réponse (soumission "vide" fantôme).
-      // Client service_role requis : RLS interdit à un visiteur anonyme de supprimer une
-      // soumission (submissions_delete_own est réservée au propriétaire du formulaire).
-      await createServiceRoleClient().from("submissions").delete().eq("id", submissionId);
-      return NextResponse.json({ error: t("public.answersSaveFailed") }, { status: 500 });
+      // Ne supprime plus la soumission : answers_snapshot ci-dessus a déjà capturé les
+      // réponses de façon durable, donc rien n'est perdu. L'admin verra un indicateur
+      // "index incomplet" dans le tableau des réponses plutôt qu'une ligne vide muette.
+      console.error("submit: insert submission_answers failed (answers_snapshot preserved)", answersError);
     }
   }
 

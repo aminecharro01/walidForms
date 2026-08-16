@@ -58,6 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     { header: "ID", key: "id", width: 12 },
     { header: "تاريخ الإرسال", key: "submitted_at", width: 20 },
     ...fields.map((f) => ({ header: f.label, key: f.id, width: 24 })),
+    { header: "ملاحظة", key: "systemNote", width: 20 },
   ];
   if (hasLocationField) {
     columns.push(
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   while (true) {
     let query = supabase
       .from("submissions")
-      .select("id, submitted_at")
+      .select("id, submitted_at, answers_snapshot")
       .eq("form_id", formId)
       .order("submitted_at", { ascending: false });
 
@@ -118,16 +119,36 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       };
 
       let locRow: { lat?: number; lng?: number; accuracy?: number } = {};
+      let usingSnapshot = false;
 
-      for (const answer of submissionAnswers) {
-        const field = fieldsMap.get(answer.field_id);
-        rowData[answer.field_id] = formatAnswerValue(answer.value_json, field?.type);
-        if (answer.location_lat !== null && answer.location_lat !== undefined) {
-          locRow = {
-            lat: answer.location_lat,
-            lng: answer.location_lng ?? undefined,
-            accuracy: answer.location_accuracy ?? undefined,
-          };
+      if (submissionAnswers.length > 0) {
+        for (const answer of submissionAnswers) {
+          const field = fieldsMap.get(answer.field_id);
+          rowData[answer.field_id] = formatAnswerValue(answer.value_json, field?.type);
+          if (answer.location_lat !== null && answer.location_lat !== undefined) {
+            locRow = {
+              lat: answer.location_lat,
+              lng: answer.location_lng ?? undefined,
+              accuracy: answer.location_accuracy ?? undefined,
+            };
+          }
+        }
+      } else {
+        // Filet de sécurité : l'écriture détaillée par champ a échoué pour cette
+        // soumission, on retombe sur l'instantané complet enregistré à l'envoi.
+        const snapshot = (submission.answers_snapshot as Record<string, unknown> | null) ?? {};
+        if (Object.keys(snapshot).length > 0) {
+          usingSnapshot = true;
+          for (const [fieldId, value] of Object.entries(snapshot)) {
+            const field = fieldsMap.get(fieldId);
+            rowData[fieldId] = formatAnswerValue(value, field?.type);
+            if (field?.type === "location" && value && typeof value === "object") {
+              const loc = value as { latitude?: number; longitude?: number; accuracy?: number };
+              if (loc.latitude !== undefined) {
+                locRow = { lat: loc.latitude, lng: loc.longitude, accuracy: loc.accuracy };
+              }
+            }
+          }
         }
       }
 
@@ -136,6 +157,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         rowData.lng = locRow.lng ?? "";
         rowData.accuracy = locRow.accuracy ?? "";
       }
+
+      rowData.systemNote = usingSnapshot ? "من نسخة احتياطية (فهرسة غير مكتملة)" : "";
 
       sheet.addRow(rowData);
     }

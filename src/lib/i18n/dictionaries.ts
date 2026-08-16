@@ -181,6 +181,10 @@ const dict = {
   },
   "resp.deleteError": { ar: "تعذر حذف الردود، حاول مرة أخرى", fr: "Échec de la suppression, veuillez réessayer" },
   "resp.locationSet": { ar: "محدد", fr: "Définie" },
+  "resp.indexIncomplete": {
+    ar: "لم تُفهرس هذه الإجابات بشكل كامل، لكن البيانات الأصلية محفوظة",
+    fr: "Ces réponses n'ont pas été indexées correctement, mais les données brutes sont conservées",
+  },
   "resp.selectAll": { ar: "تحديد الكل", fr: "Tout sélectionner" },
   "resp.selectOne": { ar: "تحديد الرد", fr: "Sélectionner la réponse" },
   "resp.date": { ar: "التاريخ", fr: "Date" },
@@ -265,6 +269,8 @@ const dict = {
     fr: "Impossible d'envoyer la réponse, veuillez réessayer",
   },
   "public.answersSaveFailed": { ar: "تعذر حفظ الإجابات", fr: "Impossible d'enregistrer les réponses" },
+  "public.submitFailedTitle": { ar: "تعذر إرسال النموذج", fr: "Échec de l'envoi" },
+  "public.retry": { ar: "إعادة المحاولة", fr: "Réessayer" },
   "public.rateLimitWarningTitle": { ar: "تنبيه", fr: "Attention" },
   "public.rateLimitWarningDesc": {
     ar: "لقد اقتربت من الحد الأقصى لعدد المحاولات المسموح به لهذه الساعة. إذا تجاوزته، ستحتاج إلى الانتظار قبل المحاولة مرة أخرى.",

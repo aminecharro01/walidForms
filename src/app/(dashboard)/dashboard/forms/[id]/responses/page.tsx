@@ -27,7 +27,7 @@ export default async function ResponsesPage({
 
   const { data: submissions } = await supabase
     .from("submissions")
-    .select("id, submitted_at, form_version_id")
+    .select("id, submitted_at, form_version_id, answers_snapshot")
     .eq("form_id", id)
     .order("submitted_at", { ascending: false });
 
@@ -93,11 +93,19 @@ export default async function ResponsesPage({
   }
   const fields = [...fieldsMap.values()].sort((a, b) => a.order_index - b.order_index);
 
-  const rows = (submissions ?? []).map((s) => ({
-    id: s.id,
-    submitted_at: s.submitted_at,
-    answers: answersBySubmission.get(s.id) ?? {},
-  }));
+  const rows = (submissions ?? []).map((s) => {
+    const indexedAnswers = answersBySubmission.get(s.id);
+    const hasIndexedAnswers = indexedAnswers && Object.keys(indexedAnswers).length > 0;
+    const snapshot = (s.answers_snapshot as Record<string, unknown> | null) ?? {};
+    const usingSnapshot = !hasIndexedAnswers && Object.keys(snapshot).length > 0;
+
+    return {
+      id: s.id,
+      submitted_at: s.submitted_at,
+      answers: hasIndexedAnswers ? indexedAnswers! : snapshot,
+      usingSnapshot,
+    };
+  });
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -44,7 +44,7 @@ export function BuilderCanvas({
       <EmptyState
         icon={ClipboardList}
         title="ابدأ ببناء نموذجك"
-        description="اختر نوع حقل من القائمة على اليمين لإضافته إلى النموذج"
+        description="اختر نوع حقل من القائمة لإضافته إلى النموذج"
       />
     );
   }
