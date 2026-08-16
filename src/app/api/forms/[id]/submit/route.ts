@@ -166,6 +166,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return row;
     });
 
+  let debugIndexError: string | undefined;
   if (answerRows.length > 0) {
     const { error: answersError } = await supabase.from("submission_answers").insert(answerRows);
     if (answersError) {
@@ -173,6 +174,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       // réponses de façon durable, donc rien n'est perdu. L'admin verra un indicateur
       // "index incomplet" dans le tableau des réponses plutôt qu'une ligne vide muette.
       console.error("submit: insert submission_answers failed (answers_snapshot preserved)", answersError);
+      // TEMPORAIRE : expose l'erreur exacte dans la réponse pour diagnostic (pas d'accès
+      // aux logs serveur sur le plan gratuit). À retirer une fois la cause identifiée.
+      debugIndexError = `${answersError.code ?? ""} ${answersError.message}`.trim();
     }
   }
 
@@ -206,5 +210,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  return NextResponse.json({ success: true, submissionId, rateLimitWarning: nearLimit });
+  return NextResponse.json({ success: true, submissionId, rateLimitWarning: nearLimit, debugIndexError });
 }
