@@ -6,12 +6,18 @@ import { ResponsesTable } from "@/components/responses/responses-table";
 import { ResponsesMap } from "@/components/maps/responses-map";
 import { Card } from "@/components/ui/card";
 import { formatDateFr } from "@/lib/utils/format";
-import { chunk } from "@/lib/utils/chunk";
+import { fetchAllInBatches, FETCH_PAGE_SIZE } from "@/lib/supabase/fetch-in-batches";
 import { getServerT } from "@/lib/i18n/server";
 
-const IN_CHUNK_SIZE = 150;
-
 export const dynamic = "force-dynamic";
+
+interface AnswerRow {
+  submission_id: string;
+  field_id: string;
+  value_json: unknown;
+  location_lat: number | null;
+  location_lng: number | null;
+}
 
 export default async function ResponsesPage({
   params,
@@ -45,32 +51,19 @@ export default async function ResponsesPage({
 
   let answersBySubmission = new Map<string, Record<string, unknown>>();
   let locationPoints: { id: string; lat: number; lng: number; label: string }[] = [];
-  // TEMPORAIRE : diagnostic visible directement sur la page (pas d'accès aux logs serveur).
-  const debugBatches: { size: number; fetched: number; error: string | null }[] = [];
 
   if (submissionIds.length > 0) {
-    const answers: {
-      submission_id: string;
-      field_id: string;
-      value_json: unknown;
-      location_lat: number | null;
-      location_lng: number | null;
-    }[] = [];
-    for (const idsBatch of chunk(submissionIds, IN_CHUNK_SIZE)) {
-      const { data, error } = await supabase
-        .from("submission_answers")
-        .select("submission_id, field_id, value_json, location_lat, location_lng")
-        .in("submission_id", idsBatch);
-      debugBatches.push({
-        size: idsBatch.length,
-        fetched: data?.length ?? 0,
-        error: error ? `${error.code ?? ""} ${error.message}`.trim() : null,
-      });
-      if (error) {
-        console.error("responses page: fetch submission_answers batch failed", error);
-        continue;
-      }
-      answers.push(...(data ?? []));
+    const { rows: answers, batchErrors } = await fetchAllInBatches<AnswerRow>(
+      submissionIds,
+      async (idsBatch, offset) =>
+        await supabase
+          .from("submission_answers")
+          .select("submission_id, field_id, value_json, location_lat, location_lng")
+          .in("submission_id", idsBatch)
+          .range(offset, offset + FETCH_PAGE_SIZE - 1)
+    );
+    if (batchErrors.length > 0) {
+      console.error("responses page: fetch submission_answers batch failed", batchErrors);
     }
 
     answersBySubmission = new Map();
@@ -124,15 +117,6 @@ export default async function ResponsesPage({
           {form.title} — {t("resp.totalPrefix")} {rows.length.toLocaleString()} {t("forms.responseCount")}
         </p>
       </div>
-
-      {/* TEMPORAIRE : diagnostic visible directement sur la page */}
-      <pre className="overflow-x-auto rounded-xl bg-slate-900 p-4 text-xs text-emerald-300" dir="ltr">
-        {JSON.stringify(
-          { totalSubmissions: submissionIds.length, totalAnswersFetched: answersBySubmission.size, debugBatches },
-          null,
-          2
-        )}
-      </pre>
 
       {locationPoints.length > 0 && (
         <Card className="p-5">

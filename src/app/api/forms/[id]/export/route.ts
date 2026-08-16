@@ -3,6 +3,16 @@ import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
 import { loadFullVersion } from "@/lib/supabase/forms";
 import { formatAnswerValue, formatDateFr } from "@/lib/utils/format";
+import { fetchAllInBatches, FETCH_PAGE_SIZE } from "@/lib/supabase/fetch-in-batches";
+
+interface AnswerRow {
+  submission_id: string;
+  field_id: string;
+  value_json: unknown;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_accuracy: number | null;
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: formId } = await params;
@@ -35,12 +45,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const versionIds = new Set<string>();
   if (form.current_version_id) versionIds.add(form.current_version_id);
   if (form.published_version_id) versionIds.add(form.published_version_id);
-  const { data: submissionVersions } = await supabase
-    .from("submissions")
-    .select("form_version_id")
-    .eq("form_id", formId);
-  for (const s of submissionVersions ?? []) {
-    if (s.form_version_id) versionIds.add(s.form_version_id);
+  {
+    // Paginé : au-delà de 1000 soumissions, PostgREST tronquerait silencieusement sinon.
+    let versionOffset = 0;
+    while (true) {
+      const { data: submissionVersions } = await supabase
+        .from("submissions")
+        .select("form_version_id")
+        .eq("form_id", formId)
+        .range(versionOffset, versionOffset + FETCH_PAGE_SIZE - 1);
+      if (!submissionVersions || submissionVersions.length === 0) break;
+      for (const s of submissionVersions) {
+        if (s.form_version_id) versionIds.add(s.form_version_id);
+      }
+      if (submissionVersions.length < FETCH_PAGE_SIZE) break;
+      versionOffset += FETCH_PAGE_SIZE;
+    }
   }
 
   const fieldsMap = new Map<string, Awaited<ReturnType<typeof loadFullVersion>>["fields"][number]>();
@@ -96,17 +116,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!submissions || submissions.length === 0) break;
 
     const submissionIds = submissions.map((s) => s.id);
-    const { data: answers, error: answersError } = await supabase
-      .from("submission_answers")
-      .select("submission_id, field_id, value_json, location_lat, location_lng, location_accuracy")
-      .in("submission_id", submissionIds);
+    const { rows: answers, batchErrors } = await fetchAllInBatches<AnswerRow>(
+      submissionIds,
+      async (idsBatch, ansOffset) =>
+        await supabase
+          .from("submission_answers")
+          .select("submission_id, field_id, value_json, location_lat, location_lng, location_accuracy")
+          .in("submission_id", idsBatch)
+          .range(ansOffset, ansOffset + FETCH_PAGE_SIZE - 1)
+    );
 
-    if (answersError) {
-      console.error("export: fetch submission_answers batch failed", answersError);
+    if (batchErrors.length > 0) {
+      console.error("export: fetch submission_answers batch failed", batchErrors);
     }
 
-    const answersBySubmission = new Map<string, typeof answers>();
-    for (const a of answers ?? []) {
+    const answersBySubmission = new Map<string, AnswerRow[]>();
+    for (const a of answers) {
       if (!answersBySubmission.has(a.submission_id)) answersBySubmission.set(a.submission_id, []);
       answersBySubmission.get(a.submission_id)!.push(a);
     }

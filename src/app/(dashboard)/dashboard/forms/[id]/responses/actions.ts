@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { chunk } from "@/lib/utils/chunk";
+import { fetchAllInBatches, FETCH_PAGE_SIZE } from "@/lib/supabase/fetch-in-batches";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -11,32 +12,34 @@ const IN_CHUNK_SIZE = 150;
 async function removeSubmissionFiles(supabase: SupabaseClient, submissionIds: string[]) {
   if (submissionIds.length === 0) return;
 
-  const answerIds: string[] = [];
-  for (const idsBatch of chunk(submissionIds, IN_CHUNK_SIZE)) {
-    const { data, error } = await supabase
-      .from("submission_answers")
-      .select("id")
-      .in("submission_id", idsBatch);
-    if (error) {
-      console.error("removeSubmissionFiles: fetch submission_answers batch failed", error);
-      continue;
-    }
-    answerIds.push(...(data ?? []).map((a) => a.id));
+  const { rows: answerRows, batchErrors: answerErrors } = await fetchAllInBatches<{ id: string }>(
+    submissionIds,
+    async (idsBatch, offset) =>
+      await supabase
+        .from("submission_answers")
+        .select("id")
+        .in("submission_id", idsBatch)
+        .range(offset, offset + FETCH_PAGE_SIZE - 1)
+  );
+  if (answerErrors.length > 0) {
+    console.error("removeSubmissionFiles: fetch submission_answers batch failed", answerErrors);
   }
+  const answerIds = answerRows.map((a) => a.id);
   if (answerIds.length === 0) return;
 
-  const paths: string[] = [];
-  for (const idsBatch of chunk(answerIds, IN_CHUNK_SIZE)) {
-    const { data, error } = await supabase
-      .from("file_uploads")
-      .select("storage_path")
-      .in("submission_answer_id", idsBatch);
-    if (error) {
-      console.error("removeSubmissionFiles: fetch file_uploads batch failed", error);
-      continue;
-    }
-    paths.push(...(data ?? []).map((f) => f.storage_path));
+  const { rows: fileRows, batchErrors: fileErrors } = await fetchAllInBatches<{ storage_path: string }>(
+    answerIds,
+    async (idsBatch, offset) =>
+      await supabase
+        .from("file_uploads")
+        .select("storage_path")
+        .in("submission_answer_id", idsBatch)
+        .range(offset, offset + FETCH_PAGE_SIZE - 1)
+  );
+  if (fileErrors.length > 0) {
+    console.error("removeSubmissionFiles: fetch file_uploads batch failed", fileErrors);
   }
+  const paths = fileRows.map((f) => f.storage_path);
   if (paths.length > 0) {
     await supabase.storage.from("submission-files").remove(paths);
   }
@@ -68,11 +71,21 @@ export async function deleteSubmissionsAction(formId: string, submissionIds: str
 export async function deleteAllSubmissionsAction(formId: string) {
   const supabase = await createClient();
 
-  const { data: submissions } = await supabase
-    .from("submissions")
-    .select("id")
-    .eq("form_id", formId);
-  const submissionIds = (submissions ?? []).map((s) => s.id);
+  const submissionIds: string[] = [];
+  {
+    let offset = 0;
+    while (true) {
+      const { data } = await supabase
+        .from("submissions")
+        .select("id")
+        .eq("form_id", formId)
+        .range(offset, offset + FETCH_PAGE_SIZE - 1);
+      if (!data || data.length === 0) break;
+      submissionIds.push(...data.map((s) => s.id));
+      if (data.length < FETCH_PAGE_SIZE) break;
+      offset += FETCH_PAGE_SIZE;
+    }
+  }
   if (submissionIds.length === 0) return;
 
   await removeSubmissionFiles(supabase, submissionIds);

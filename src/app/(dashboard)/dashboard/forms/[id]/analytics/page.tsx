@@ -8,9 +8,13 @@ import { ResponsesLineChart } from "@/components/charts/responses-line-chart";
 import { DistributionBarChart } from "@/components/charts/distribution-bar-chart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getServerT } from "@/lib/i18n/server";
-import { chunk } from "@/lib/utils/chunk";
+import { fetchAllInBatches, FETCH_PAGE_SIZE } from "@/lib/supabase/fetch-in-batches";
 
-const IN_CHUNK_SIZE = 150;
+interface AnswerRow {
+  field_id: string;
+  value_json: unknown;
+  location_lat: number | null;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -26,27 +30,39 @@ export default async function AnalyticsPage({
   const { data: form } = await supabase.from("forms").select("*").eq("id", id).single();
   if (!form) notFound();
 
-  const { data: submissions } = await supabase
-    .from("submissions")
-    .select("id, submitted_at, form_version_id")
-    .eq("form_id", id)
-    .order("submitted_at", { ascending: true });
+  // Paginé : au-delà de 1000 soumissions, PostgREST tronquerait silencieusement sinon.
+  const submissions: { id: string; submitted_at: string; form_version_id: string | null }[] = [];
+  {
+    let subOffset = 0;
+    while (true) {
+      const { data } = await supabase
+        .from("submissions")
+        .select("id, submitted_at, form_version_id")
+        .eq("form_id", id)
+        .order("submitted_at", { ascending: true })
+        .range(subOffset, subOffset + FETCH_PAGE_SIZE - 1);
+      if (!data || data.length === 0) break;
+      submissions.push(...data);
+      if (data.length < FETCH_PAGE_SIZE) break;
+      subOffset += FETCH_PAGE_SIZE;
+    }
+  }
 
-  const total = submissions?.length ?? 0;
+  const total = submissions.length;
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-  const todayCount = (submissions ?? []).filter((s) => new Date(s.submitted_at) >= startOfToday).length;
+  const todayCount = submissions.filter((s) => new Date(s.submitted_at) >= startOfToday).length;
 
   const startOfWeek = new Date();
   startOfWeek.setDate(startOfWeek.getDate() - 7);
-  const weekCount = (submissions ?? []).filter((s) => new Date(s.submitted_at) >= startOfWeek).length;
+  const weekCount = submissions.filter((s) => new Date(s.submitted_at) >= startOfWeek).length;
 
   // Réponses par jour (30 derniers jours)
   const dailyMap = new Map<string, number>();
   const last30 = new Date();
   last30.setDate(last30.getDate() - 30);
-  for (const s of submissions ?? []) {
+  for (const s of submissions) {
     const d = new Date(s.submitted_at);
     if (d < last30) continue;
     const key = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -59,7 +75,7 @@ export default async function AnalyticsPage({
   const versionIds = new Set<string>();
   if (form.current_version_id) versionIds.add(form.current_version_id);
   if (form.published_version_id) versionIds.add(form.published_version_id);
-  for (const s of submissions ?? []) {
+  for (const s of submissions) {
     if (s.form_version_id) versionIds.add(s.form_version_id);
   }
 
@@ -73,22 +89,22 @@ export default async function AnalyticsPage({
   );
   const locationFieldExists = [...fieldsMap.values()].some((f) => f.type === "location");
 
-  const submissionIds = (submissions ?? []).map((s) => s.id);
+  const submissionIds = submissions.map((s) => s.id);
   let distributionsByField = new Map<string, Map<string, number>>();
   let locationCount = 0;
 
   if (submissionIds.length > 0) {
-    const answers: { field_id: string; value_json: unknown; location_lat: number | null }[] = [];
-    for (const idsBatch of chunk(submissionIds, IN_CHUNK_SIZE)) {
-      const { data, error } = await supabase
-        .from("submission_answers")
-        .select("field_id, value_json, location_lat")
-        .in("submission_id", idsBatch);
-      if (error) {
-        console.error("analytics: fetch submission_answers batch failed", error);
-        continue;
-      }
-      answers.push(...(data ?? []));
+    const { rows: answers, batchErrors } = await fetchAllInBatches<AnswerRow>(
+      submissionIds,
+      async (idsBatch, ansOffset) =>
+        await supabase
+          .from("submission_answers")
+          .select("field_id, value_json, location_lat")
+          .in("submission_id", idsBatch)
+          .range(ansOffset, ansOffset + FETCH_PAGE_SIZE - 1)
+    );
+    if (batchErrors.length > 0) {
+      console.error("analytics: fetch submission_answers batch failed", batchErrors);
     }
 
     distributionsByField = new Map();
