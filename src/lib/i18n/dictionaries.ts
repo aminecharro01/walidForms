@@ -28,6 +28,7 @@ const dict = {
   "nav.new": { ar: "جديد", fr: "Nouveau" },
   "nav.newForm": { ar: "نموذج جديد", fr: "Nouveau formulaire" },
   "nav.logout": { ar: "تسجيل الخروج", fr: "Déconnexion" },
+  "nav.mergedAnalytics": { ar: "دمج وتحليل", fr: "Fusion & analyse" },
 
   // Landing page
   "landing.badge": { ar: "منصة جمع بيانات حديثة", fr: "Plateforme moderne de collecte de données" },

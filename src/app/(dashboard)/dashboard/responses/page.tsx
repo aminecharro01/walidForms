@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquare, ChevronRight, ChevronLeft } from "lucide-react";
+import { MessageSquare, ChevronRight, ChevronLeft, Combine } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,13 +51,20 @@ export default async function AllResponsesPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
-          {t("resp.allTitle")}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {t("resp.allSubtitle")} — {total.toLocaleString()} {t("forms.responseCount")}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-[family-name:var(--font-cairo)] text-2xl font-bold text-slate-900">
+            {t("resp.allTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {t("resp.allSubtitle")} — {total.toLocaleString()} {t("forms.responseCount")}
+          </p>
+        </div>
+        <Link href="/dashboard/merged-analytics">
+          <Button variant="outline" size="sm">
+            <Combine className="h-4 w-4" /> {t("nav.mergedAnalytics")}
+          </Button>
+        </Link>
       </div>
 
       {submissions.length === 0 ? (

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   MessageSquare,
+  Combine,
   Settings,
   LogOut,
   ClipboardPlus,
@@ -24,6 +25,7 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
     { href: "/dashboard", label: t("nav.overview"), icon: LayoutDashboard },
     { href: "/dashboard/forms", label: t("nav.forms"), icon: ClipboardList },
     { href: "/dashboard/responses", label: t("nav.responses"), icon: MessageSquare },
+    { href: "/dashboard/merged-analytics", label: t("nav.mergedAnalytics"), icon: Combine },
     { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
   ];
 
