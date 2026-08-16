@@ -45,6 +45,8 @@ export default async function ResponsesPage({
 
   let answersBySubmission = new Map<string, Record<string, unknown>>();
   let locationPoints: { id: string; lat: number; lng: number; label: string }[] = [];
+  // TEMPORAIRE : diagnostic visible directement sur la page (pas d'accès aux logs serveur).
+  const debugBatches: { size: number; fetched: number; error: string | null }[] = [];
 
   if (submissionIds.length > 0) {
     const answers: {
@@ -59,6 +61,11 @@ export default async function ResponsesPage({
         .from("submission_answers")
         .select("submission_id, field_id, value_json, location_lat, location_lng")
         .in("submission_id", idsBatch);
+      debugBatches.push({
+        size: idsBatch.length,
+        fetched: data?.length ?? 0,
+        error: error ? `${error.code ?? ""} ${error.message}`.trim() : null,
+      });
       if (error) {
         console.error("responses page: fetch submission_answers batch failed", error);
         continue;
@@ -117,6 +124,15 @@ export default async function ResponsesPage({
           {form.title} — {t("resp.totalPrefix")} {rows.length.toLocaleString()} {t("forms.responseCount")}
         </p>
       </div>
+
+      {/* TEMPORAIRE : diagnostic visible directement sur la page */}
+      <pre className="overflow-x-auto rounded-xl bg-slate-900 p-4 text-xs text-emerald-300" dir="ltr">
+        {JSON.stringify(
+          { totalSubmissions: submissionIds.length, totalAnswersFetched: answersBySubmission.size, debugBatches },
+          null,
+          2
+        )}
+      </pre>
 
       {locationPoints.length > 0 && (
         <Card className="p-5">
