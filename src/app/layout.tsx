@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cairo, Tajawal } from "next/font/google";
+import { Cairo, Tajawal, Reem_Kufi } from "next/font/google";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { getServerLocale } from "@/lib/i18n/server";
 import { dirFor } from "@/lib/i18n/dictionaries";
@@ -17,6 +17,12 @@ const tajawal = Tajawal({
   weight: ["300", "400", "500", "700", "900"],
 });
 
+const reemKufi = Reem_Kufi({
+  variable: "--font-reem-kufi",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "WalidForms | إنشاء وجمع البيانات",
   description:
@@ -30,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang={locale}
       dir={dirFor(locale)}
-      className={`${cairo.variable} ${tajawal.variable} h-full antialiased`}
+      className={`${cairo.variable} ${tajawal.variable} ${reemKufi.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 font-[family-name:var(--font-tajawal)] text-slate-900">
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>

@@ -21,6 +21,7 @@ interface StatusPoint {
   lng: number;
   label: string;
   color: string;
+  details?: { label: string; value: string }[];
 }
 
 export default function StatusMapInner({ points }: { points: StatusPoint[] }) {
@@ -51,7 +52,20 @@ export default function StatusMapInner({ points }: { points: StatusPoint[] }) {
             radius={7}
             pathOptions={{ color: "#ffffff", weight: 2, fillColor: p.color, fillOpacity: 0.9 }}
           >
-            <Popup>{p.label}</Popup>
+            <Popup>
+              <div dir="rtl" style={{ minWidth: 170, textAlign: "right" }}>
+                <b>{p.label}</b>
+                {p.details && p.details.length > 0 && (
+                  <div style={{ marginTop: 4 }}>
+                    {p.details.map((d) => (
+                      <div key={d.label}>
+                        <b>{d.label}:</b> {d.value || "—"}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Popup>
           </CircleMarker>
         ))}
       </MapContainer>

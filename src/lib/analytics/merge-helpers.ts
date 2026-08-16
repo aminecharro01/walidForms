@@ -41,8 +41,8 @@ export const OCCUPANCY_LABELS_AR: Record<OccupancyStatus, string> = {
 };
 
 export const OCCUPANCY_COLORS: Record<OccupancyStatus, string> = {
-  occupied: "#10b981",
-  abandoned: "#ef4444",
-  seasonal: "#f59e0b",
+  occupied: "#2f7d3a",
+  abandoned: "#8B3A3A",
+  seasonal: "#C98A2C",
   other: "#94a3b8",
 };
