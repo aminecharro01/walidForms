@@ -239,6 +239,21 @@ const dict = {
     ar: "تحدد لغة النموذج العامة اتجاه العرض (يمين إلى يسار أو العكس) ونصوص الواجهة الثابتة للزوار",
     fr: "La langue du formulaire détermine le sens d'affichage (droite-à-gauche ou l'inverse) et les textes fixes de l'interface pour les visiteurs",
   },
+  "builder.headerImage": { ar: "الصورة الرأسية للنموذج", fr: "Image d'en-tête du formulaire" },
+  "builder.headerImageHint": {
+    ar: "الأبعاد المستحسنة: 1600×400 بكسل (PNG أو JPEG أو WEBP، حتى 5 ميغابايت)",
+    fr: "Dimensions recommandées : 1600×400 px (PNG, JPEG ou WEBP, 5 Mo max)",
+  },
+  "builder.headerImageUpload": { ar: "رفع صورة", fr: "Téléverser une image" },
+  "builder.headerImageChange": { ar: "تغيير الصورة", fr: "Changer l'image" },
+  "builder.headerImageRemove": { ar: "إزالة", fr: "Retirer" },
+  "builder.headerImageUploading": { ar: "جارٍ الرفع...", fr: "Téléversement..." },
+  "builder.headerImageError": { ar: "تعذر رفع الصورة، حاول مرة أخرى", fr: "Échec du téléversement, veuillez réessayer" },
+  "builder.headerImageTypeError": {
+    ar: "نوع الملف غير مدعوم (PNG أو JPEG أو WEBP فقط)",
+    fr: "Type de fichier non pris en charge (PNG, JPEG ou WEBP uniquement)",
+  },
+  "builder.headerImageSizeError": { ar: "حجم الصورة يتجاوز 5 ميغابايت", fr: "L'image dépasse 5 Mo" },
 
   // Formulaire public
   "public.notAvailable": { ar: "هذا النموذج غير متاح حالياً", fr: "Ce formulaire n'est pas disponible actuellement" },

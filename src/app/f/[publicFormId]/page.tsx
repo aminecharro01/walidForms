@@ -15,7 +15,7 @@ export default async function PublicFormPage({
 
   const { data: form } = await supabase
     .from("forms")
-    .select("id, title, description, status, language, published_version_id, public_slug")
+    .select("id, title, description, status, language, header_image_url, published_version_id, public_slug")
     .eq("public_slug", publicFormId)
     .single();
 
@@ -31,6 +31,7 @@ export default async function PublicFormPage({
       title={form.title}
       description={form.description}
       language={form.language === "fr" ? "fr" : "ar"}
+      headerImageUrl={form.header_image_url}
       fields={fields}
       conditions={conditions}
     />

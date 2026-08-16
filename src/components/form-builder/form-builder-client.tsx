@@ -11,6 +11,7 @@ import { BuilderCanvas } from "./builder-canvas";
 import { PropertiesPanel } from "./properties-panel";
 import { ConditionBuilder } from "./condition-builder";
 import { PreviewModal } from "./preview-modal";
+import { HeaderImageUploader } from "./header-image-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -41,13 +42,14 @@ export function FormBuilderClient({
   const [title, setTitle] = useState(form.title);
   const [description, setDescription] = useState(form.description ?? "");
   const [formLanguage, setFormLanguage] = useState<FormLanguage>(form.language ?? "ar");
+  const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(form.header_image_url ?? null);
   const [metaDirty, setMetaDirty] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const selectedField = state.fields.find((f) => f.id === state.selectedFieldId) ?? null;
 
   const saveStatus = useAutosave(state.dirty || metaDirty, async () => {
-    await saveFormMetaAction(form.id, title, description, formLanguage);
+    await saveFormMetaAction(form.id, title, description, formLanguage, headerImageUrl);
     if (form.current_version_id) {
       await saveVersionContentAction(form.current_version_id, state.fields, state.conditions);
     }
@@ -57,7 +59,7 @@ export function FormBuilderClient({
 
   async function handlePublish() {
     setPublishing(true);
-    await saveFormMetaAction(form.id, title, description, formLanguage);
+    await saveFormMetaAction(form.id, title, description, formLanguage, headerImageUrl);
     if (form.current_version_id) {
       await saveVersionContentAction(form.current_version_id, state.fields, state.conditions);
     }
@@ -144,6 +146,18 @@ export function FormBuilderClient({
         {/* منطقة البناء */}
         <div className="overflow-y-auto bg-slate-50 p-4 lg:p-6">
           <div className="mx-auto max-w-2xl">
+            {tab === "fields" && (
+              <div className="mb-4">
+                <HeaderImageUploader
+                  formId={form.id}
+                  value={headerImageUrl}
+                  onChange={(url) => {
+                    setHeaderImageUrl(url);
+                    setMetaDirty(true);
+                  }}
+                />
+              </div>
+            )}
             <div className="mb-4 flex gap-1 rounded-xl bg-white p-1 shadow-sm w-fit">
               <TabButton active={tab === "fields"} onClick={() => setTab("fields")} icon={Layers}>
                 {t("builder.fields")} ({state.fields.length})

@@ -16,6 +16,7 @@ export function PublicFormClient({
   title,
   description,
   language,
+  headerImageUrl,
   fields,
   conditions,
 }: {
@@ -23,6 +24,7 @@ export function PublicFormClient({
   title: string;
   description?: string | null;
   language: Locale;
+  headerImageUrl?: string | null;
   fields: FormField[];
   conditions: Condition[];
 }) {
@@ -145,11 +147,21 @@ export function PublicFormClient({
   return (
     <div dir={dir} className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-slate-50 px-4 py-8 sm:py-12">
       <form onSubmit={handleSubmit} className="mx-auto max-w-xl">
-        <div className="mb-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white">
-            <ClipboardList className="h-6 w-6" />
+        {headerImageUrl ? (
+          <div
+            className="mb-6 w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm shadow-slate-100"
+            style={{ aspectRatio: "1600 / 400" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={headerImageUrl} alt="" className="h-full w-full object-cover" />
           </div>
-        </div>
+        ) : (
+          <div className="mb-6 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white">
+              <ClipboardList className="h-6 w-6" />
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-100 sm:p-8">
           <h1 className="font-[family-name:var(--font-cairo)] text-xl font-bold text-slate-900">

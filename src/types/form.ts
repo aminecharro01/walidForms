@@ -105,6 +105,7 @@ export interface Form {
   description?: string | null;
   status: FormStatus;
   language: FormLanguage;
+  header_image_url?: string | null;
   current_version_id: string | null;
   published_version_id: string | null;
   public_slug: string;

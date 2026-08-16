@@ -9,10 +9,14 @@ export async function saveFormMetaAction(
   formId: string,
   title: string,
   description: string,
-  language: FormLanguage
+  language: FormLanguage,
+  headerImageUrl: string | null
 ) {
   const supabase = await createClient();
-  const { error } = await supabase.from("forms").update({ title, description, language }).eq("id", formId);
+  const { error } = await supabase
+    .from("forms")
+    .update({ title, description, language, header_image_url: headerImageUrl })
+    .eq("id", formId);
   if (error) throw error;
   revalidatePath(`/dashboard/forms/${formId}/edit`);
 }
