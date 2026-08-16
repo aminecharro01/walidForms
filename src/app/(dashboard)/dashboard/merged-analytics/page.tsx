@@ -337,16 +337,5 @@ export default async function MergedAnalyticsPage({
     dateMax,
   };
 
-  return (
-    <div className="animate-fade-in">
-      <div className="mb-4 flex justify-end">
-        <Link href="/dashboard/merged-analytics">
-          <Button variant="outline" size="sm">
-            تغيير الاختيار
-          </Button>
-        </Link>
-      </div>
-      <MergedDashboardClient data={dashboardData} />
-    </div>
-  );
+  return <MergedDashboardClient data={dashboardData} backHref="/dashboard/merged-analytics" />;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   Chart as ChartJS,
@@ -10,22 +11,53 @@ import {
   Tooltip,
   Legend,
   type Chart as ChartInstance,
+  type Plugin,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Bar, Doughnut } from "react-chartjs-2";
-import { Download, FileDown, Loader2, StickyNote } from "lucide-react";
+import { ArrowRight, Download, FileDown, Loader2, StickyNote } from "lucide-react";
 import { StatusMap } from "@/components/maps/status-map";
 import { OCCUPANCY_LABELS_AR, OCCUPANCY_COLORS, type OccupancyStatus } from "@/lib/analytics/merge-helpers";
 import styles from "./dashboard.module.css";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, ChartDataLabels);
+ChartJS.defaults.set("plugins.datalabels", { display: false });
 
 const CLAY = "#A94A28";
 const ZELLIGE = "#1E6E71";
 const SAFFRON = "#C98A2C";
 const BRICK = "#8B3A3A";
 const LINE = "#d8c8a4";
+const INK = "#2a2016";
 const INK_SOFT = "#6b5f4d";
 const PALETTE_SEQ = [CLAY, ZELLIGE, SAFFRON, BRICK, "#5b7a4f", "#7a5c8a", "#3a5f8a", "#b08a3e", "#4f6b6d"];
+
+function pctOf(value: number, arr: { count: number }[]): number {
+  const sum = arr.reduce((s, x) => s + x.count, 0);
+  return sum > 0 ? Math.round((value / sum) * 100) : 0;
+}
+
+function centerTextPlugin(text: string): Plugin<"doughnut"> {
+  return {
+    id: "centerText",
+    afterDraw(chart) {
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "700 20px var(--font-reem-kufi), sans-serif";
+      ctx.fillStyle = INK;
+      ctx.fillText(text, cx, cy - 8);
+      ctx.font = "500 10.5px var(--font-tajawal), sans-serif";
+      ctx.fillStyle = INK_SOFT;
+      ctx.fillText("المجموع", cx, cy + 12);
+      ctx.restore();
+    },
+  };
+}
 
 export interface MergedDashboardData {
   formTitles: string[];
@@ -80,10 +112,15 @@ function ChartPanel({
       <div className={styles.panelHead}>
         <div>
           <h3>{title}</h3>
-          <div className="hint">{hint}</div>
+          <div className={styles.hint}>{hint}</div>
         </div>
         {onDownload && (
-          <button type="button" className={styles.panelDownload} onClick={onDownload} title="تحميل كصورة">
+          <button
+            type="button"
+            className={`${styles.panelDownload} pdf-ignore`}
+            onClick={onDownload}
+            title="تحميل كصورة"
+          >
             <Download className="h-3.5 w-3.5" />
           </button>
         )}
@@ -93,7 +130,7 @@ function ChartPanel({
   );
 }
 
-export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
+export function MergedDashboardClient({ data, backHref }: { data: MergedDashboardData; backHref: string }) {
   const dashboardRef = useRef<HTMLDivElement>(null);
   const darbChartRef = useRef<ChartInstance<"bar"> | null>(null);
   const jaziraChartRef = useRef<ChartInstance<"bar"> | null>(null);
@@ -120,13 +157,14 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
     setExportingPdf(true);
     try {
       const [{ default: html2canvas }, { default: JsPDF }] = await Promise.all([
-        import("html2canvas"),
+        import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#EDE3CE",
+        ignoreElements: (el) => el.classList.contains("pdf-ignore"),
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new JsPDF("p", "mm", "a4");
@@ -212,9 +250,11 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
   ];
 
   const tooltipRtl = { rtl: true, textDirection: "rtl" as const };
+  const sinfTotal = byType.reduce((sum, x) => sum + x.count, 0);
+  const halaTotal = halaChartData.reduce((sum, x) => sum + x.value, 0);
 
   return (
-    <div className={styles.root} ref={dashboardRef}>
+    <div className={styles.root} dir="rtl" ref={dashboardRef}>
       <header className={styles.header}>
         <div className={styles.zelligePattern} />
         <div className={`${styles.eyebrow} ${styles.kufi}`}>جرد ميداني — {new Date().getFullYear()}</div>
@@ -241,10 +281,19 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
           ))}
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={styles.exportBtn} onClick={downloadPdf} disabled={exportingPdf}>
+          <button
+            type="button"
+            className={`${styles.exportBtn} pdf-ignore`}
+            onClick={downloadPdf}
+            disabled={exportingPdf}
+          >
             {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
             تحميل التقرير كملف PDF
           </button>
+          <Link href={backHref} className={`${styles.exportBtn} pdf-ignore`}>
+            <ArrowRight className="h-4 w-4" />
+            تغيير الاختيار
+          </Link>
         </div>
       </header>
 
@@ -277,19 +326,45 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
               hint="مرتّبة تنازليًا حسب عدد البنايات المرصودة في كل درب"
               onDownload={() => downloadChart(darbChartRef, "عدد-البنايات-حسب-الدرب.png")}
             >
-              <div style={{ height: 340 }}>
+              <div style={{ height: Math.max(340, byStreet.length * 30) }}>
                 <Bar
                   ref={darbChartRef}
                   data={{
                     labels: byStreet.map((x) => x.label),
-                    datasets: [{ data: byStreet.map((x) => x.count), backgroundColor: CLAY, borderRadius: 5, maxBarThickness: 26 }],
+                    datasets: [
+                      {
+                        data: byStreet.map((x) => x.count),
+                        backgroundColor: CLAY,
+                        borderRadius: 5,
+                        maxBarThickness: 22,
+                      },
+                    ],
                   }}
                   options={{
                     indexAxis: "y",
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: tooltipRtl },
-                    scales: { x: { grid: { color: LINE } }, y: { grid: { display: false } } },
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        ...tooltipRtl,
+                        callbacks: {
+                          label: (ctx) => `${ctx.formattedValue} بناية (${pctOf(Number(ctx.raw), byStreet)}%)`,
+                        },
+                      },
+                      datalabels: {
+                        display: true,
+                        color: INK,
+                        anchor: "end",
+                        align: "end",
+                        font: { weight: 700, size: 11 },
+                        formatter: (v: number) => v.toLocaleString(),
+                      },
+                    },
+                    scales: {
+                      x: { grid: { color: LINE }, ticks: { precision: 0 } },
+                      y: { grid: { display: false }, ticks: { font: { size: 11.5 } } },
+                    },
                   }}
                 />
               </div>
@@ -304,13 +379,34 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
                   ref={jaziraChartRef}
                   data={{
                     labels: byBlock.map((x) => x.label),
-                    datasets: [{ data: byBlock.map((x) => x.count), backgroundColor: ZELLIGE, borderRadius: 5, maxBarThickness: 34 }],
+                    datasets: [
+                      { data: byBlock.map((x) => x.count), backgroundColor: ZELLIGE, borderRadius: 5, maxBarThickness: 34 },
+                    ],
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: tooltipRtl },
-                    scales: { y: { grid: { color: LINE }, beginAtZero: true }, x: { grid: { display: false } } },
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        ...tooltipRtl,
+                        callbacks: {
+                          label: (ctx) => `${ctx.formattedValue} بناية (${pctOf(Number(ctx.raw), byBlock)}%)`,
+                        },
+                      },
+                      datalabels: {
+                        display: true,
+                        color: INK,
+                        anchor: "end",
+                        align: "top",
+                        font: { weight: 700, size: 11 },
+                        formatter: (v: number) => v.toLocaleString(),
+                      },
+                    },
+                    scales: {
+                      y: { grid: { color: LINE }, beginAtZero: true, ticks: { precision: 0 } },
+                      x: { grid: { display: false }, ticks: { font: { size: 11.5 } } },
+                    },
                   }}
                 />
               </div>
@@ -337,6 +433,7 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
               <div style={{ height: 280 }}>
                 <Doughnut
                   ref={sinfChartRef}
+                  plugins={[centerTextPlugin(String(sinfTotal))]}
                   data={{
                     labels: byType.map((x) => x.label),
                     datasets: [{ data: byType.map((x) => x.count), backgroundColor: PALETTE_SEQ, borderColor: "#FBF7EC", borderWidth: 2 }],
@@ -345,7 +442,21 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: "62%",
-                    plugins: { legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: tooltipRtl },
+                    plugins: {
+                      legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } },
+                      tooltip: {
+                        ...tooltipRtl,
+                        callbacks: {
+                          label: (ctx) => `${ctx.label}: ${ctx.formattedValue} (${pctOf(Number(ctx.raw), byType)}%)`,
+                        },
+                      },
+                      datalabels: {
+                        display: true,
+                        color: "#fff",
+                        font: { weight: 700, size: 11 },
+                        formatter: (v: number) => `${pctOf(v, byType)}%`,
+                      },
+                    },
                   }}
                 />
               </div>
@@ -360,13 +471,34 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
                   ref={tawabiqChartRef}
                   data={{
                     labels: byFloors.map((x) => x.label),
-                    datasets: [{ data: byFloors.map((x) => x.count), backgroundColor: SAFFRON, borderRadius: 5, maxBarThickness: 30 }],
+                    datasets: [
+                      { data: byFloors.map((x) => x.count), backgroundColor: SAFFRON, borderRadius: 5, maxBarThickness: 30 },
+                    ],
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: tooltipRtl },
-                    scales: { y: { grid: { color: LINE }, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 10.5 } } } },
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        ...tooltipRtl,
+                        callbacks: {
+                          label: (ctx) => `${ctx.formattedValue} بناية (${pctOf(Number(ctx.raw), byFloors)}%)`,
+                        },
+                      },
+                      datalabels: {
+                        display: true,
+                        color: INK,
+                        anchor: "end",
+                        align: "top",
+                        font: { weight: 700, size: 11 },
+                        formatter: (v: number) => v.toLocaleString(),
+                      },
+                    },
+                    scales: {
+                      y: { grid: { color: LINE }, beginAtZero: true, ticks: { precision: 0 } },
+                      x: { grid: { display: false }, ticks: { font: { size: 10.5 } } },
+                    },
                   }}
                 />
               </div>
@@ -379,15 +511,38 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
               <div style={{ height: 280 }}>
                 <Doughnut
                   ref={halaChartRef}
+                  plugins={[centerTextPlugin(String(halaTotal))]}
                   data={{
                     labels: halaChartData.map((x) => x.label),
-                    datasets: [{ data: halaChartData.map((x) => x.value), backgroundColor: halaChartData.map((x) => x.color), borderColor: "#FBF7EC", borderWidth: 2 }],
+                    datasets: [
+                      {
+                        data: halaChartData.map((x) => x.value),
+                        backgroundColor: halaChartData.map((x) => x.color),
+                        borderColor: "#FBF7EC",
+                        borderWidth: 2,
+                      },
+                    ],
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: "62%",
-                    plugins: { legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: tooltipRtl },
+                    plugins: {
+                      legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } },
+                      tooltip: {
+                        ...tooltipRtl,
+                        callbacks: {
+                          label: (ctx) =>
+                            `${ctx.label}: ${ctx.formattedValue} (${halaTotal > 0 ? Math.round((Number(ctx.raw) / halaTotal) * 100) : 0}%)`,
+                        },
+                      },
+                      datalabels: {
+                        display: true,
+                        color: "#fff",
+                        font: { weight: 700, size: 11 },
+                        formatter: (v: number) => `${halaTotal > 0 ? Math.round((v / halaTotal) * 100) : 0}%`,
+                      },
+                    },
                   }}
                 />
               </div>
@@ -410,17 +565,32 @@ export function MergedDashboardClient({ data }: { data: MergedDashboardData }) {
             hint="عدد البنايات حسب الحالة، لكل درب"
             onDownload={() => downloadChart(crossChartRef, "الحالة-حسب-الدرب.png")}
           >
-            <div style={{ height: 380 }}>
+            <div style={{ height: Math.max(380, crossStreets.length * 26) }}>
               <Bar
                 ref={crossChartRef}
                 data={{ labels: crossStreets, datasets: crossDatasets }}
                 options={{
+                  indexAxis: "y",
                   responsive: true,
                   maintainAspectRatio: false,
-                  plugins: { legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: tooltipRtl },
+                  plugins: {
+                    legend: { position: "bottom", rtl: true, labels: { boxWidth: 10, font: { size: 11 } } },
+                    tooltip: {
+                      ...tooltipRtl,
+                      callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue} بناية`,
+                      },
+                    },
+                    datalabels: {
+                      display: (ctx) => Number(ctx.dataset.data[ctx.dataIndex]) > 0,
+                      color: "#fff",
+                      font: { weight: 700, size: 10 },
+                      formatter: (v: number) => v,
+                    },
+                  },
                   scales: {
-                    x: { stacked: true, grid: { display: false } },
-                    y: { stacked: true, grid: { color: LINE }, beginAtZero: true },
+                    x: { stacked: true, grid: { color: LINE }, ticks: { precision: 0 } },
+                    y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11.5 } } },
                   },
                 }}
               />
